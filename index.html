@@ -132,6 +132,20 @@ h1,h2,h3{font-family:Cinzel,Georgia,serif;margin:0;line-height:1.05;text-wrap:ba
 .earn{font:700 22px Cinzel,serif;display:flex;justify-content:center;align-items:center;gap:10px;color:#e7d2ff}
 .earn small{display:block;font:400 13px Spectral,serif;color:var(--mute)}
 #endM .box.dead{background:radial-gradient(ellipse at 50% 0%,rgba(160,10,4,.4),transparent 60%),linear-gradient(180deg,#1c0d0a,#080404)}
+/* S24 (R26): the belt at the bottom of the run, and the Merchant's page */
+#belt{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);display:flex;gap:12px}
+#belt[hidden]{display:none}
+@media (max-width:560px){#belt{left:auto;right:calc(env(safe-area-inset-right) + 12px);transform:none;gap:10px}}
+#belt button,#beltShop div{position:relative;width:58px;height:58px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 50% 35%,#2a1d16,#070504);border:1px solid var(--line);box-shadow:inset 0 0 0 2px #000,0 0 12px rgba(0,0,0,.8);pointer-events:auto;padding:0}
+#belt button:disabled{opacity:.35}
+#belt button:not(:disabled):active{transform:scale(.92);border-color:var(--gold)}
+#belt span{position:absolute;right:-3px;top:-3px;font:700 11px Cinzel,serif;background:#000;border:1px solid var(--line);border-radius:999px;padding:1px 5px;color:var(--gold)}
+@media (hover:none){#belt span{display:none}}
+#beltShop{display:flex;gap:14px;justify-content:center}
+#beltShop div.empty::after{content:'';width:14px;height:14px;border:1px dashed rgba(201,154,62,.45);border-radius:50%}
+#shop h2{font-size:clamp(30px,8vw,42px);margin-top:8px;background:linear-gradient(180deg,#ffe2b0,#d8a24e 55%,#8a3a16);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,70,20,.45)) drop-shadow(0 2px 0 #000)}
+#shop .note{max-width:440px}
+#wareList{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px}
 #metaList,#kitList{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px}
 .altH{margin:6px 0 0;font:700 18px Cinzel,serif;letter-spacing:.08em;color:var(--gold)}
 #kitTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%;max-width:440px}
@@ -175,6 +189,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   </div>
   <div id="bossbar"><b>Malgrath, the Ash Lord</b><div><i id="bossFill"></i></div></div>
   <div id="banner"><b></b><small></small></div>
+  <div id="belt" role="group" aria-label="Belt" hidden><button data-i="0"></button><button data-i="1"></button><button data-i="2"></button></div>
 </div>
 
 <div id="menu" class="screen on">
@@ -182,7 +197,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <button class="ib setB corner r2" aria-label="Settings"><svg viewBox="0 0 20 20" fill="none" stroke="#e6d6b8" stroke-width="1.7"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/><circle cx="10" cy="10" r="5.4"/></svg></button>
   <header class="title"><h1>Ashen<br>Horde</h1><div class="orn"></div><p>Survive the night. Slay the Ash Lord.</p></header>
   <div class="purse"><span class="soul"></span><span id="purse">0</span>&nbsp;souls</div>
-  <div id="hubSpace" role="img" aria-label="The town square: the heroes sit around a fire pit; the Gate, Chapel, Watchtower, Altar of Souls and Rampart stand around it"></div>
+  <div id="hubSpace" role="img" aria-label="The town square: the heroes sit around a fire pit; the Gate, Chapel, Watchtower, Altar of Souls and Rampart stand around it, and the Merchant waits by his cart"></div>
   <div id="hubPanel"><b id="hubName"></b><p id="hubTxt"></p><div id="modeBtns" role="group" aria-label="Length of the night"><button data-m="short" aria-pressed="true"><b>Short Night</b><small>5 min · 1 boss</small></button><button data-m="full" aria-pressed="false"><b>Full Night</b><small>30 min · 6 rounds</small></button></div><div id="hubBtns"><button id="playB" class="big">Descend</button><button id="townBuy" class="ghost"></button></div></div>
   <p id="best" class="best"></p>
   <p id="sync" class="note"></p>
@@ -200,6 +215,19 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <div id="metaList"></div>
   <p class="note">Blessings last forever and apply to every hero.</p>
   <button id="altarBack" class="ghost">Back to town</button>
+</div>
+
+<div id="shop" class="screen">
+  <h2>The Merchant</h2>
+  <div class="orn"></div>
+  <p class="note">“Souls for supplies, wanderer. The night is long.”</p>
+  <div class="purse"><span class="soul"></span><span id="purse3">0</span>&nbsp;souls</div>
+  <h3 class="altH">Your belt</h3>
+  <div id="beltShop" role="group" aria-label="Your belt"></div>
+  <p class="note">Up to 3 items go into the night with you. Tap one at the bottom of the screen (keys 1–3) to use it. Used items are gone; the rest stay on your belt.</p>
+  <h3 class="altH">Wares</h3>
+  <div id="wareList"></div>
+  <button id="shopBack" class="ghost">Back to town</button>
 </div>
 
 <div id="lvlM" class="modal"><div class="box frame">
@@ -262,7 +290,7 @@ const DEBUG=/debug/.test(location.hash);
 
 /* ---------- save (format unchanged: key ashenHorde_v1 + cloud data/users/<id>/save) ---------- */
 const KEY='ashenHorde_v1';
-const defaults=()=>({souls:0,heroes:{barbarian:true},meta:{},town:{},dmg:{},kit:{},best:{time:0,kills:0,wins:0},muted:false,runs:0,hero:'barbarian',ts:0});
+const defaults=()=>({souls:0,heroes:{barbarian:true},meta:{},town:{},dmg:{},kit:{},belt:[null,null,null],best:{time:0,kills:0,wins:0},muted:false,runs:0,hero:'barbarian',ts:0});
 let save=defaults();
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)save=Object.assign(save,s)}catch(e){}
 let cloud=null,cloudBusy=false,cloudDirty=false;
@@ -291,7 +319,7 @@ async function initCloud(){
     const d=snap.exists?snap.data():null;
     if(d&&(d.ts||0)>(save.ts||0)){
       save=Object.assign(defaults(),JSON.parse(JSON.stringify(d)));saveLocal();setMute(save.muted,true);
-      if(state==='menu')buildMenu();else if(state==='altar')buildAltar();
+      if(state==='menu')buildMenu();else if(state==='altar')buildAltar();else if(state==='shop')buildShop();
       setCloud('cloud');
     }else if(!d||(save.ts||0)>(d.ts||0)){if(!save.ts)save.ts=Date.now();cloudDirty=true;flushCloud()}
     else setCloud('cloud');
@@ -388,6 +416,15 @@ const METAS={
 const kitOf=h=>{save.kit=save.kit||{};return save.kit[h]||(save.kit[h]={u:[],m:0})};
 const kitHas=(h,id)=>{const k=KITS[h];return!!k&&(k.sig===id||k.open.includes(id)||kitOf(h).u.includes(id))};
 const maxLvl=id=>run&&KITS[run.hero]&&KITS[run.hero].sig===id&&kitOf(run.hero).m?6:5;
+/* S24 (R26): the Merchant's wares, paid with souls. Bought items wait on the 3-slot belt (save.belt) and are gone once used. */
+const WARES={
+  draught:{name:'Healing Draught',d:'Heals 40% of your life',cost:25},
+  bomb:{name:'Ash Bomb',d:'A great blast all around you',cost:40},
+  rune:{name:'Frost Rune',d:'Freezes every foe in sight for 3 seconds',cost:45},
+  tonic:{name:'Fury Tonic',d:'+30% damage for 15 seconds',cost:35},
+  charm:{name:'Soul Charm',d:'+60% pickup range for the rest of the night',cost:30}
+};
+const belt=()=>{if(!Array.isArray(save.belt))save.belt=[null,null,null];while(save.belt.length<3)save.belt.push(null);return save.belt};
 const metaCost=(k,l)=>METAS[k].cost?METAS[k].cost(l):Math.round(30*Math.pow(1.7,l));
 const ETYPES={
   ghoul:{r:13,hp:10,spd:36,dmg:7,xp:1},
@@ -890,6 +927,7 @@ const hh=(x,y,s)=>{let h=(x*374761393+y*668265263+s*982451653)|0;h=Math.imul(h^(
 /* ---------- icons ---------- */
 const ICOL={cleave:'#c9ccd2',bonespear:'#e9e0c8',fireball:'#ff7a2b',daggers:'#dfe4ec',lightning:'#ffe98a',frostnova:'#9fdcff',skeletons:'#6dff7d',brimstone:'#ff5a1c',skulls:'#ffb35a',warcry:'#ffb070',whirlwind:'#c9ccd2',leapslam:'#d8a543',axes:'#c9ccd2',corpseburst:'#6dff7d',curse:'#b277ff',meteor:'#ff5a1c',bladetrap:'#dfe4ec',poison:'#7ddc5a',shadowstep:'#9a7dff',blades:'#dfe4ec',might:'#ff3b2a',haste:'#d8a543',boots:'#d8a543',armor:'#a9adb5',vigor:'#ff4a4a',regen:'#6dff7d',magnet:'#ff6a5a',reach:'#b277ff',heal:'#ff4a4a',souls:'#b277ff',fate:'#d8a543',revive:'#ffd9a8'};
 function skullIcon(g,eye){g.fillStyle='#e6dfca';circ(g,0,-2,9);g.fillRect(-5.5,3,11,6);g.fillStyle='#120d0a';circ(g,-3.4,-2,2.6);circ(g,3.4,-2,2.6);g.fillRect(-.8,2,1.6,3);if(eye){g.save();g.shadowColor=eye;g.shadowBlur=6;g.fillStyle=eye;circ(g,-3.4,-2,1.1);circ(g,3.4,-2,1.1);g.restore()}}
+Object.assign(ICOL,{draught:'#ff5a4a',bomb:'#ffb35a',rune:'#9fdcff',tonic:'#ff7a2b',charm:'#b277ff'});/* S24 (R26) */
 function icon(id,size=52){
   const c=document.createElement('canvas'),d=Math.min(2,devicePixelRatio||1);c.width=c.height=Math.round(size*d);c.style.width=c.style.height=size+'px';
   const g=c.getContext('2d');g.scale(d*size/48,d*size/48);g.translate(24,24);g.lineCap='round';g.lineJoin='round';
@@ -932,6 +970,12 @@ function icon(id,size=52){
     case'reach':g.strokeStyle='#b277ff';g.lineWidth=2;for(const r of[5,10,15]){g.globalAlpha=1.2-r/18;g.beginPath();g.arc(0,0,r,0,TAU);g.stroke()}g.globalAlpha=1;break;
     case'souls':g.fillStyle='#a65cff';g.beginPath();g.moveTo(0,-16);g.quadraticCurveTo(12,2,0,14);g.quadraticCurveTo(-12,2,0,-16);g.fill();g.fillStyle='#f0dcff';circ(g,-2,2,3);break;
     case'fate':g.fillStyle='#e8dcc1';g.beginPath();g.moveTo(-16,0);g.quadraticCurveTo(0,-14,16,0);g.quadraticCurveTo(0,14,-16,0);g.fill();g.fillStyle='#8e1a10';circ(g,0,0,6);g.fillStyle='#000';circ(g,0,0,2.6);break;
+    /* S24 (R26): the Merchant's wares */
+    case'draught':g.fillStyle='#6e5a46';g.fillRect(-3,-17,6,5);g.fillStyle='#4a3428';g.fillRect(-4,-12,8,3);g.fillStyle='rgba(220,220,230,.35)';g.beginPath();g.moveTo(-4,-9);g.lineTo(4,-9);g.lineTo(11,8);g.quadraticCurveTo(0,17,-11,8);g.closePath();g.fill();g.fillStyle='#d0121c';g.beginPath();g.moveTo(-8,3);g.lineTo(8,3);g.lineTo(10,8);g.quadraticCurveTo(0,15,-10,8);g.closePath();g.fill();g.fillStyle='rgba(255,255,255,.55)';g.fillRect(-6,-4,2,8);break;
+    case'bomb':g.fillStyle='#2a2422';circ(g,-1,4,11);g.fillStyle='#4a403c';circ(g,-4,1,4);g.fillStyle='#5d4a3a';g.fillRect(-3,-10,6,5);g.strokeStyle='#c9a36a';g.lineWidth=2;g.beginPath();g.moveTo(0,-10);g.quadraticCurveTo(6,-15,9,-12);g.stroke();g.fillStyle='#ffcf6a';circ(g,10,-13,3);g.fillStyle='#fff3c4';circ(g,10,-13,1.4);break;
+    case'rune':g.fillStyle='#5b6470';g.beginPath();g.moveTo(0,-17);g.lineTo(13,-4);g.lineTo(8,15);g.lineTo(-8,15);g.lineTo(-13,-4);g.closePath();g.fill();g.strokeStyle='#bfeaff';g.lineWidth=2.2;ln(g,0,-10,0,10);ln(g,-6,-4,6,4);ln(g,6,-4,-6,4);break;
+    case'tonic':g.fillStyle='#6e5a46';g.fillRect(-2.5,-17,5,5);g.fillStyle='rgba(220,220,230,.35)';g.fillRect(-4,-12,8,6);g.beginPath();g.moveTo(-4,-7);g.lineTo(4,-7);g.lineTo(9,14);g.lineTo(-9,14);g.closePath();g.fill();g.fillStyle='#ff5a1c';g.beginPath();g.moveTo(-6,2);g.lineTo(6,2);g.lineTo(8,13);g.lineTo(-8,13);g.closePath();g.fill();g.fillStyle='#ffcf6a';g.beginPath();g.moveTo(0,-2);g.quadraticCurveTo(5,4,0,9);g.quadraticCurveTo(-5,4,0,-2);g.fill();break;
+    case'charm':g.strokeStyle='#c99a3e';g.lineWidth=1.6;g.beginPath();g.moveTo(-9,-16);g.lineTo(0,-6);g.lineTo(9,-16);g.stroke();g.fillStyle='#c99a3e';circ(g,0,4,11);g.fillStyle='#120a14';circ(g,0,4,8);g.fillStyle='#a65cff';g.beginPath();g.moveTo(0,-3);g.quadraticCurveTo(7,6,0,12);g.quadraticCurveTo(-7,6,0,-3);g.fill();g.fillStyle='#f0dcff';circ(g,-1,6,1.8);break;
     case'revive':g.strokeStyle='#ffd9a8';g.lineWidth=3.2;g.beginPath();g.ellipse(0,-8,5,6,0,0,TAU);g.stroke();ln(g,0,-2,0,16);ln(g,-9,3,9,3);break;
   }
   g.restore();return c;
@@ -1151,6 +1195,7 @@ function recalc(){
   const h=HEROES[run.hero],old=S?S.maxHp:0;
   S={maxHp:h.hp*(1+.08*meta('vitality')+.12*townLv('wall')),speed:h.speed,armor:h.armor,dmgMul:1+.06*meta('might'),cdMul:(h.cd||1)*Math.pow(.96,meta('haste')),area:1,magnet:70*(1+.15*meta('magnet')),regen:0,crit:h.crit||0};
   for(const k in run.passives)for(let i=0;i<run.passives[k];i++)PASSIVES[k].a(S);
+  if(run.charm)S.magnet*=1.6;/* S24 (R26): Soul Charm */
   if(old&&S.maxHp>old)P.hp+=S.maxHp-old;
   P.hp=Math.min(P.hp,S.maxHp);
 }
@@ -1161,12 +1206,12 @@ function newRun(hero,mode){
   mode=MODES[mode]?mode:'short';
   enemies=[];gems=[];projs=[];eprojs=[];effects=[];nP=0;texts=[];decals=[];minions=[];zones=[];S=null;hitStop=0;flashA=0;
   run={hero,time:0,kills:0,xp:0,level:1,pending:0,souls:0,spawnT:.5,mode,round:-1,ev:0,evs:[],ei:0,elites:[],swarm:-1,boss:null,bossSpawned:false,shake:0,rerolls:meta('fate')+townLv('chapel'),revives:meta('revive'),weapons:[],passives:{},over:false,won:false,endT:0,hurt:0,hint:save.runs<3?6:0,bellT:18,
-    cine:0,roarT:0,growlT:2,hbT:0,hbP:0,stepT:0,cryT:0,leap:null,dash:null,cb:[]};
+    cine:0,roarT:0,growlT:2,hbT:0,hbP:0,stepT:0,cryT:0,leap:null,dash:null,cb:[],furyT:0,charm:0};
   P={x:0,y:0,r:12,hp:1,fx:1,fy:0,face:1,walk:0,inv:0,safe:0,moving:false,atkT:0,atkA:0};
   run.evs=runEvents();run.elites=runElites();
   for(const w of HEROES[hero].start)addWeapon(w);
   recalc();P.hp=S.maxHp;syncMinions();
-  hud.last={};$('bossbar').style.display='none';
+  hud.last={};$('bossbar').style.display='none';syncBelt();
   effects.push({k:'rise',x:0,y:0,life:1.2,max:1.2});burst(0,0,30,'255,130,50',120,.8,2.2,true,-1);
   updateHud();setState('play');
 }
@@ -1174,11 +1219,11 @@ function hudOn(s){return['play','levelup','chest','pause'].includes(s)||(s==='se
 function setState(s){
   if(s==='settings'&&state!=='settings')setFrom=state;
   state=s;
-  $('menu').classList.toggle('on',s==='menu'||(s==='settings'&&setFrom==='menu'));$('altar').classList.toggle('on',s==='altar');
+  $('menu').classList.toggle('on',s==='menu'||(s==='settings'&&setFrom==='menu'));$('altar').classList.toggle('on',s==='altar');$('shop').classList.toggle('on',s==='shop');
   $('hud').classList.toggle('on',hudOn(s));
   for(const[id,st]of[['lvlM','levelup'],['chestM','chest'],['pauseM','pause'],['endM','end'],['setM','settings']])$(id).classList.toggle('on',s===st);
   if(s!=='play'){input.on=false;input.id=null}
-  if(s==='menu'||s==='altar')musSet('menu',0,false);else if(s==='pause'||s==='levelup'||s==='chest')MUS.mode='pause';else if(s==='end')MUS.mode='end';else if(s==='play')MUS.mode='run';
+  if(s==='menu'||s==='altar'||s==='shop')musSet('menu',0,false);else if(s==='pause'||s==='levelup'||s==='chest')MUS.mode='pause';else if(s==='end')MUS.mode='end';else if(s==='play')MUS.mode='run';
 }
 function banner(t,sub,boss){const b=$('banner');b.querySelector('b').textContent=t;b.querySelector('small').textContent=sub||'';b.classList.remove('go');b.classList.toggle('boss',!!boss);void b.offsetWidth;b.classList.add('go')}
 
@@ -1253,6 +1298,7 @@ function dmgText(x,y,v,crit,col){if(texts.length>60)return;texts.push({x:x+rr(-6
 function hurt(e,dmg,kx,ky,quiet){
   if(e.dead)return false;let crit=false;if(S.crit&&rand()<S.crit){dmg*=2;crit=true}
   if(run.cryT>run.time)dmg*=1.2;if(e.curseT>run.time)dmg*=1+e.curseA;/* S23: War Cry and Withering Curse */
+  if(run.furyT>run.time)dmg*=1.3;/* S24 (R26): Fury Tonic */
   e.hp-=dmg;e.flash=.09;e.hitT=.16;e.kx+=kx/e.mass;e.ky+=ky/e.mass;
   if(!quiet||rand()<.3)dmgText(e.x,e.y-e.r-4,dmg,crit);
   sfx.impact(curW);if(crit){sfx.crit();if(!thr("critStop",900))stop(.03)}
@@ -1422,7 +1468,8 @@ function update(dt){
     let dx=P.x-e.x,dy=P.y-e.y;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
     let sp=e.spd*(e.slow>0?.5:1)*(e.daze>0?.45:1)*(e.curseT>run.time?.7:1),mx=dx,my=dy;
     if(e.daze>0)e.daze-=dt;if(e.stun>0){e.stun-=dt;sp=0}/* S23: War Cry dazes, Leap Slam stuns, the curse withers */
-    if(e.type==='bat'){const w=Math.sin(run.time*4+e.seed)*.9;mx=dx*Math.cos(w)-dy*Math.sin(w);my=dx*Math.sin(w)+dy*Math.cos(w)}
+    const fz=e.frz>run.time;if(fz)sp=0;/* S24 (R26): a Frost Rune freezes them: no moving, biting or shooting */
+    if(fz){}else if(e.type==='bat'){const w=Math.sin(run.time*4+e.seed)*.9;mx=dx*Math.cos(w)-dy*Math.sin(w);my=dx*Math.sin(w)+dy*Math.cos(w)}
     else if(e.type==='archer'){if(d<170){mx=-dx*.6;my=-dy*.6}else if(d<235){mx=-dy*.4;my=dx*.4}
       e.shootT-=dt;if(e.shootT<=0&&d<340&&!run.over){e.shootT=rr(2.2,3);eprojs.push({k:'arrow',x:e.x,y:e.y-6,vx:dx*215,vy:dy*215,dmg:e.dmg,r:4,life:3});if(!thr('bow',150))nz(.08,.04,'bandpass',900,400,3)}}
     else if(e.boss)sp=bossAI(e,dt,dx,dy,sp);
@@ -1433,7 +1480,7 @@ function update(dt){
     if(e.boss){e.stepD+=Math.hypot(e.x-ox,e.y-oy);if(e.stepD>34){e.stepD=0;const v=clamp(1-d/700,.15,1);sfx.step(v);if(d<320)shake(2*v);addP(e.x+rr(-20,20),e.y+e.r*.9,rr(-30,30),rr(-10,0),.8,rr(2,4),'rgba(70,60,52,.7)',false,0)}}
     const decay=Math.pow(.0005,dt);e.kx*=decay;e.ky*=decay;
     if(Math.abs(P.x-e.x)>2)e.face=P.x>e.x?1:-1;
-    if(!run.over&&d<e.r+P.r-2&&e.atk<=0){damagePlayer(e.dmg);e.atk=.9;e.lunge=.28;e.la=Math.atan2(P.y-e.y,P.x-e.x)}
+    if(!run.over&&!fz&&d<e.r+P.r-2&&e.atk<=0){damagePlayer(e.dmg);e.atk=.9;e.lunge=.28;e.la=Math.atan2(P.y-e.y,P.x-e.x)}
     if(d>far&&!e.boss&&!e.elite){const a=P.moving?Math.atan2(P.fy,P.fx)+rr(-1,1):rand()*TAU,R=spawnR();e.x=P.x+Math.cos(a)*R;e.y=P.y+Math.sin(a)*R}
   }
   separate();
@@ -1531,6 +1578,27 @@ function collect(g){
   else if(g.k==='soul'){run.souls++;sfx.soul();burst(g.x,g.y,6,'190,130,255',60,.4,1.8,true,-1)}
   else if(g.k==='heal'){P.hp=Math.min(S.maxHp,P.hp+30);texts.push({x:P.x,y:P.y-24,v:'+30',life:.9,max:.9,col:'#7dff8a'});sfx.heal();burst(P.x,P.y,12,'255,80,80',60,.6,2,true,-1)}
 }
+/* S24 (R26): the belt. Tap a slot (or keys 1-3) to use what the Merchant sold you; it is gone once used. */
+function useItem(i){
+  if(state!=='play'||!run||run.over||run.won)return;const b=belt(),id=b[i];if(!id||!WARES[id])return;
+  b[i]=null;persist();syncBelt();
+  if(id==='draught'){const h=Math.round(S.maxHp*.4);P.hp=Math.min(S.maxHp,P.hp+h);texts.push({x:P.x,y:P.y-24,v:'+'+h,life:1,max:1,col:'#7dff8a'});sfx.heal();burst(P.x,P.y,22,'255,80,80',90,.7,2.2,true,-1)}
+  else if(id==='bomb'){const R=240,dmg=90*(1+dangerT()/90)*S.dmgMul;curW='fire';
+    forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,dmg,Math.cos(a)*520,Math.sin(a)*520,true)});
+    effects.push({k:'nova',x:P.x,y:P.y,R,life:.5,max:.5,col:'255,170,90'},{k:'boom',x:P.x,y:P.y,R:R*.55,life:.45,max:.45});
+    burst(P.x,P.y,40,'255,130,40',R*2.6,.7,3.2,true);burst(P.x,P.y,14,'rgba(40,30,25,.7)',R*1.4,1,4.5,false,-1);addDecal('scorch',P.x,P.y+8,R*.9,40);
+    run.shake=Math.max(run.shake,12);stop(.08);flashA=Math.max(flashA,.35);flashC='255,170,90';sfx.boom();sfx.roar()}
+  else if(id==='rune'){const R=Math.hypot(VW,VH)/2+40;
+    forNear(P.x,P.y,R,e=>{e.slow=Math.max(e.slow,3);if(!e.boss)e.frz=run.time+3});
+    for(const p of eprojs){p.dead=true;burst(p.x,p.y,4,'190,235,255',50,.4,1.8,true)}
+    effects.push({k:'nova',x:P.x,y:P.y,R:Math.min(R,420),life:.6,max:.6,col:'170,225,255'});flashA=Math.max(flashA,.45);flashC='190,235,255';sfx.nova();banner('Frost Rune','The horde is frozen')}
+  else if(id==='tonic'){run.furyT=run.time+15;sfx.shout();burst(P.x,P.y,26,'255,70,30',120,.7,2.4,true,-1);texts.push({x:P.x,y:P.y-26,v:'Fury!',life:1,max:1,col:'#ff7a5a'})}
+  else if(id==='charm'){run.charm=1;recalc();for(const g of gems)if(g.k!=='chest'&&Math.hypot(g.x-P.x,g.y-P.y)<S.magnet)g.mag=true;sfx.soul();burst(P.x,P.y,22,'190,130,255',110,.7,2.2,true,-1);texts.push({x:P.x,y:P.y-26,v:'Souls drawn near',life:1.2,max:1.2,col:'#d9b8ff'})}
+}
+function syncBelt(){const b=belt(),el=$('belt');el.hidden=!b.some(Boolean);
+  [...el.children].forEach((btn,i)=>{const id=b[i],w=WARES[id];btn.innerHTML='';btn.disabled=!w;btn.setAttribute('aria-label',w?`${w.name} (key ${i+1})`:'Empty belt slot');
+    if(w){btn.appendChild(icon(id,46));btn.insertAdjacentHTML('beforeend',`<span>${i+1}</span>`)}})}
+$('belt').onclick=e=>{const b=e.target.closest('button');if(b){auInit();useItem(+b.dataset.i)}};
 
 /* ---------- level ups (unchanged pool and weights) ---------- */
 function offerPool(){
@@ -1611,8 +1679,8 @@ const townHurt=k=>!!(save.dmg&&save.dmg[k]);
 const townLv=k=>Math.max(0,townRaw(k)-(townHurt(k)?1:0));
 const townCost=l=>[40,110][l];
 const repairCost=l=>[20,55][Math.max(0,l-1)];
-const HUBB={chapel:{w:96,h:80,fx:.18,row:0},gate:{w:88,h:76,fx:.5,row:0},watch:{w:60,h:122,fx:.83,row:0},altar:{w:66,h:46,fx:.14,row:1},wall:{w:100,h:54,fx:.86,row:1}};
-const HUBN={chapel:'Chapel',gate:'Gate',watch:'Watchtower',altar:'Altar of Souls',wall:'Rampart'};
+const HUBB={chapel:{w:96,h:80,fx:.18,row:0},gate:{w:88,h:76,fx:.5,row:0},watch:{w:60,h:122,fx:.83,row:0},altar:{w:66,h:46,fx:.14,row:1},wall:{w:100,h:54,fx:.86,row:1},shop:{w:74,h:62,fx:.5,row:1}};
+const HUBN={chapel:'Chapel',gate:'Gate',watch:'Watchtower',altar:'Altar of Souls',wall:'Rampart',shop:'Merchant'};
 const HANG={barbarian:Math.PI,necromancer:Math.PI*1.27,sorceress:Math.PI*1.73,rogue:0};
 const HUB={G:null,heroes:{},hp:{},rects:{},fl:[],dark:new Map()};
 let hubSel={t:'hero'};
@@ -1648,6 +1716,19 @@ function drawBuilding(g,b,l,base){
     g.strokeStyle='#1a0d08';g.lineWidth=2;for(let i=-2;i<=2;i++){g.beginPath();g.moveTo(x+i*ar*.38,ay+2);g.lineTo(x+i*ar*.38,base-h*.25);g.stroke()}
     g.beginPath();g.moveTo(x-ar,ay+ar*1.1);g.lineTo(x+ar,ay+ar*1.1);g.moveTo(x-ar,ay+ar*1.9);g.lineTo(x+ar,ay+ar*1.9);g.stroke();
     g.fillStyle='#2a1a12';g.fillRect(L+w*.1,T+h*.48,5,9);g.fillRect(R-w*.1-5,T+h*.48,5,9);return}
+  if(b.k==='shop'){/* S24 (R26): the Merchant, hooded, beside his covered cart; bottles on the board, a lantern on the pole */
+    const cL=L+w*.34,cR=R,cx=(cL+cR)/2;
+    g.fillStyle='#2a1a12';g.fillRect(cL+2,T+h*.1,3,h*.62);g.fillRect(cR-5,T+h*.1,3,h*.62);
+    g.fillStyle='#5a1610';g.beginPath();g.moveTo(cL-5,T+h*.2);g.lineTo(cx,T-h*.02);g.lineTo(cR+5,T+h*.2);g.closePath();g.fill();
+    g.fillStyle='#7a2a16';for(let i=0;i<3;i++){const x0=cL-5+(i*2+.5)*(cR-cL+10)/6;g.fillRect(x0,T+h*.2,(cR-cL+10)/12,h*.07)}
+    g.fillStyle='#4a3428';g.fillRect(cL,T+h*.58,cR-cL,h*.3);g.fillStyle='#5e4132';g.fillRect(cL-3,T+h*.55,cR-cL+6,h*.06);
+    const bc=['#d0121c','#6ed04a','#7fc8ff','#ff8a2a','#a65cff'];for(let i=0;i<5;i++){const x=cL+5+i*(cR-cL-10)/4;g.fillStyle=bc[i];g.fillRect(x-2.5,T+h*.43,5,h*.12);g.fillStyle='#6e5a46';g.fillRect(x-1,T+h*.38,2,h*.05)}
+    g.fillStyle='#1a0f0a';for(const x of[cL+7,cR-7]){g.beginPath();g.arc(x,base-5,6,0,TAU);g.fill()}g.fillStyle='#4a3428';for(const x of[cL+7,cR-7]){g.beginPath();g.arc(x,base-5,2,0,TAU);g.fill()}
+    g.strokeStyle='#2a1a12';g.lineWidth=1;g.beginPath();g.moveTo(cR-3,T+h*.2);g.lineTo(cR-3,T+h*.28);g.stroke();g.fillStyle='#ffcf6a';g.fillRect(cR-6,T+h*.28,6,8);
+    const fx=L+w*.15;g.fillStyle='#1e1512';g.beginPath();g.moveTo(fx-w*.14,base);g.quadraticCurveTo(fx-w*.12,T+h*.45,fx,T+h*.2);g.quadraticCurveTo(fx+w*.12,T+h*.45,fx+w*.14,base);g.closePath();g.fill();
+    g.fillStyle='#2b201a';g.beginPath();g.arc(fx,T+h*.28,w*.085,0,TAU);g.fill();g.fillStyle='#050302';g.beginPath();g.arc(fx+1,T+h*.3,w*.055,0,TAU);g.fill();
+    g.fillStyle='#ffb868';g.fillRect(fx-2,T+h*.29,1.6,1.6);g.fillRect(fx+2.4,T+h*.29,1.6,1.6);
+    g.fillStyle='#3a2a20';g.fillRect(fx+w*.06,T+h*.5,w*.1,3);return}
   if(b.k==='altar'){/* stone slab, a dark obelisk, soul light */
     g.fillStyle='#2e231e';g.beginPath();g.moveTo(x-w*.13,T+h*.4);g.lineTo(x,T-h*.35);g.lineTo(x+w*.13,T+h*.4);g.closePath();g.fill();
     g.fillStyle='#3e3029';g.fillRect(L+w*.12,T+h*.5,w*.76,h*.5);g.fillStyle='#57463b';g.fillRect(L,T+h*.36,w,h*.16);
@@ -1692,6 +1773,7 @@ function renderHub(dt){
       if(sel){ctx.globalCompositeOperation='lighter';drawGlow('gold',x,base-d.h*bs*.5,d.w*bs*.9,.35);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
       if(k==='gate'){ctx.globalCompositeOperation='lighter';drawGlow('red',x,base-d.h*bs*.2,d.w*bs*.75,.5+Math.sin(t*2)*.08);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
       if(k==='altar'){ctx.globalCompositeOperation='lighter';drawGlow('purple',x,base-d.h*bs*.8,d.w*bs*.8,.45+Math.sin(t*2.6)*.1);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
+      if(k==='shop'){ctx.globalCompositeOperation='lighter';drawGlow('gold',x+d.w*bs*.44,base-d.h*bs*.66,d.w*bs*.55,.45+Math.sin(t*5)*.05+Math.sin(t*13)*.03);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
       ctx.save();ctx.translate(x,base);ctx.scale(bs,bs);drawBuilding(ctx,{k,w:d.w,h:d.h,x:0},l,0);if(hurt){ctx.fillStyle='rgba(10,5,3,.45)';ctx.fillRect(-d.w/2,-d.h,d.w,d.h)}ctx.restore();
       it.label={x,y:base+11,txt:HUBN[k]+(town?' '+(hurt?'🔥':['·','I','II'][l]):''),col:hurt?'#ff9a6a':town&&!l?'#a8957a':'#e6d6b8',sel,hurt,top:base-d.h*bs,bs}}};
     items.push(it)}
@@ -1725,7 +1807,7 @@ function renderHub(dt){
 $('hubSpace').addEventListener('click',e=>{auInit();const x=e.clientX,y=e.clientY,G=HUB.G;if(!G)return;
   let best=null,bd=1e9;for(const id in HUB.hp){const p=HUB.hp[id],d=Math.hypot(x-p.x,(y-p.cy)*.75);if(d<40*G.s+6&&d<bd){bd=d;best=id}}
   if(best){save.hero=best;persist();sfx.tick();hubSel={t:'hero'};buildMenu();return}
-  for(const k of['wall','altar','chapel','gate','watch']){const r=HUB.rects[k];if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();if(k==='altar'){altarHero=null;buildAltar();setState('altar');return}hubSel=k==='gate'?{t:'gate'}:{t:'b',k};hubInfo();return}}
+  for(const k of['wall','altar','shop','chapel','gate','watch']){const r=HUB.rects[k];if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();if(k==='altar'){altarHero=null;buildAltar();setState('altar');return}if(k==='shop'){buildShop();setState('shop');return}hubSel=k==='gate'?{t:'gate'}:{t:'b',k};hubInfo();return}}
   hubSel={t:'hero'};hubInfo()});
 $('townBuy').onclick=()=>{if(hubSel.t!=='b')return;const k=hubSel.k,r=townRaw(k);auInit();
   if(townHurt(k)){const c=repairCost(r);if(save.souls<c)return;save.souls-=c;delete save.dmg[k]}
@@ -1759,6 +1841,19 @@ function buildAltar(){
 }
 $('playB').onclick=()=>{auInit();const id=save.hero,h=HEROES[id];if(!save.heroes[id]){if(save.souls>=h.cost){save.souls-=h.cost;save.heroes[id]=true;persist();sfx.chest();buildMenu()}return}newRun(id,SET.mode)};
 $('altarBack').onclick=()=>{buildMenu();setState('menu')};
+/* S24 (R26): the Merchant's page: your belt on top, his wares below; a bought item goes into the first empty slot */
+function buildShop(){
+  const b=belt(),full=b.every(Boolean);$('purse3').textContent=save.souls;
+  const bs=$('beltShop');bs.innerHTML='';
+  b.forEach((id,i)=>{const d=document.createElement('div');d.className=id?'':'empty';d.setAttribute('role','img');d.setAttribute('aria-label',id?WARES[id].name:'Empty slot');if(id)d.appendChild(icon(id,46));bs.appendChild(d)});
+  const list=$('wareList');list.innerHTML='';
+  for(const id in WARES){const w=WARES[id],r=document.createElement('div');r.className='meta';
+    r.innerHTML=`<div></div><div><b>${w.name}</b><p>${w.d}</p></div><button class="buy"><span class="soul"></span>${w.cost}</button>`;r.firstChild.appendChild(icon(id,44));
+    const btn=r.querySelector('button');btn.disabled=full||save.souls<w.cost;if(full)btn.title='Your belt is full';
+    btn.onclick=()=>{const k=b.indexOf(null);if(k<0||save.souls<w.cost)return;auInit();save.souls-=w.cost;b[k]=id;persist();sfx.chest();buildShop()};list.appendChild(r)}
+  if(full){const p=document.createElement('p');p.className='note';p.textContent='Your belt is full. Use an item in the night to make room.';list.appendChild(p)}
+}
+$('shopBack').onclick=()=>{buildMenu();setState('menu')};
 $('pauseB').onclick=()=>{if(state!=='play')return;const bl=$('buildList');bl.innerHTML='';
   for(const w of run.weapons){const d=document.createElement('div');d.appendChild(icon(w.id,44));d.insertAdjacentHTML('beforeend',`<span>${w.lvl}</span>`);bl.appendChild(d)}
   for(const k in run.passives){const d=document.createElement('div');d.appendChild(icon(k,44));d.insertAdjacentHTML('beforeend',`<span>${run.passives[k]}</span>`);bl.appendChild(d)}
@@ -1783,7 +1878,8 @@ cv.addEventListener('pointerdown',e=>{auInit();if(state!=='play'||input.id!==nul
 cv.addEventListener('pointermove',e=>{if(e.pointerId!==input.id)return;input.cx=e.clientX;input.cy=e.clientY;const dx=input.cx-input.ox,dy=input.cy-input.oy,d=Math.hypot(dx,dy);if(d>70){input.ox=input.cx-dx/d*70;input.oy=input.cy-dy/d*70}});
 const up=e=>{if(e.pointerId===input.id){input.id=null;input.on=false}};
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);window.addEventListener('pointerup',up);window.addEventListener('blur',()=>{input.id=null;input.on=false;input.keys={}});
-window.addEventListener('keydown',e=>{input.keys[e.key.length===1?e.key.toLowerCase():e.key]=true;if(e.key==='Escape'||e.key==='p'){if(state==='play')$('pauseB').onclick();else if(state==='pause')setState('play')}});
+window.addEventListener('keydown',e=>{input.keys[e.key.length===1?e.key.toLowerCase():e.key]=true;if(e.key==='Escape'||e.key==='p'){if(state==='play')$('pauseB').onclick();else if(state==='pause')setState('play')}
+  if(state==='play'&&!e.repeat&&e.key>='1'&&e.key<='3')useItem(+e.key-1)});
 window.addEventListener('keyup',e=>{input.keys[e.key.length===1?e.key.toLowerCase():e.key]=false});
 document.addEventListener('touchmove',e=>{if(!e.target.closest('.screen,.modal'))e.preventDefault()},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
@@ -1891,6 +1987,7 @@ function render(dt){
       /* S23: the hero rises through the air on a Leap Slam and turns round and round in a Whirlwind */
       const hop=run.leap?Math.sin(Math.min(1,run.leap.t/run.leap.T)*Math.PI)*48:0,ww=getW('whirlwind'),spin=ww&&ww.spin>0;
       ctx.drawImage(SHADOW,P.x-14+hop*.1,P.y+9+hop*.05,28-hop*.2,10-hop*.06);
+      if(run.furyT>run.time){ctx.globalCompositeOperation='lighter';drawGlow('red',P.x,P.y-8-hop,46,(.3+Math.sin(now*9)*.08)*Math.min(1,run.furyT-run.time));ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}/* S24: Fury Tonic */
       if(P.inv>0&&Math.floor(now*14)%2)continue;
       const fc=spin?(Math.sin(now*26)>0?1:-1):P.face;if(spin)lean=Math.sin(now*26)*.25;
       const set=run.hurt>.22?fr.f:fr.n;sprDraw(set[fc<0?1:0],P.x+ox,P.y-bob-4-hop,sp.w*(1-br*.006),sp.h*(1+br*.018),lean);continue}
@@ -2063,7 +2160,7 @@ function perf(ms){
   if(ms<3||ms>150||document.hidden)return;ema+=(ms-ema)*.05;
   if(state==='play'&&hitStop<=0){if(ema>21.5){slowT+=ms/1000;if(slowT>1.6&&Q<QL.length-1){Q++;QS=QL[Q];slowT=0;ema=16;nP=Math.min(nP,QS.parts);resize()}}else slowT=Math.max(0,slowT-ms/3000)}
 }
-const inGame=()=>run&&state!=='menu'&&state!=='altar'&&!(state==='settings'&&setFrom==='menu');
+const inGame=()=>run&&state!=='menu'&&state!=='altar'&&state!=='shop'&&!(state==='settings'&&setFrom==='menu');
 function frame(now){
   requestAnimationFrame(frame);
   const raw=now-last,dt=Math.min(.05,raw/1000);last=now;perf(raw);
@@ -2080,7 +2177,8 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>buildMenu(
 requestAnimationFrame(frame);
 if(DEBUG)window.__AH={SPR,CORPSE,GROUND,DEC,DECOR,get fps(){return fpsV},get q(){return Q},get state(){return state},get run(){return run},get P(){return P},get effects(){return effects},get enemies(){return enemies},stats:()=>({fps:Math.round(fpsV),q:Q,enemies:enemies.length,parts:nP,lights:nL,voices:AU.voices,decals:decals.length,dpr:DPR}),
   jump(t){if(!run)return;run.time=t;while(run.ei<run.elites.length&&run.elites[run.ei].t<t)run.ei++;while(run.ev<run.evs.length&&run.evs[run.ev].t<t)run.ev++},god(){if(S){S.maxHp=99999;P.hp=99999;S.armor=999}},lvl(){if(run)run.pending++},setQ(q){Q=q;QS=QL[q];resize()},hurtMe(f){P.hp=S.maxHp*f},chest(){if(run)drop('chest',P.x+20,P.y)},
-  /* S23 test helpers */start(h,m){newRun(h,m||'short')},give(id,l){const w=getW(id);if(w)w.lvl=l;else{addWeapon(id);getW(id).lvl=l}if(id==='skeletons')syncMinions()},pool:()=>offerPool().map(o=>o.id+':'+o.lvl),get save(){return save},get zones(){return zones},get projs(){return projs},altar(){altarHero=null;buildAltar();setState('altar')}};
+  /* S23 test helpers */start(h,m){newRun(h,m||'short')},give(id,l){const w=getW(id);if(w)w.lvl=l;else{addWeapon(id);getW(id).lvl=l}if(id==='skeletons')syncMinions()},pool:()=>offerPool().map(o=>o.id+':'+o.lvl),get save(){return save},get zones(){return zones},get projs(){return projs},altar(){altarHero=null;buildAltar();setState('altar')},
+  /* S24 test helpers */shop(){buildShop();setState('shop')},use:i=>useItem(i),get S(){return S}};
 }
 </script>
 </body>
