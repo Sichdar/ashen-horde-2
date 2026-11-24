@@ -65,6 +65,14 @@ h1,h2,h3{font-family:Cinzel,Georgia,serif;margin:0;line-height:1.05;text-wrap:ba
 #hubTxt{margin:0;font-size:15px;text-align:center;color:var(--ink);min-height:2.9em}
 #hubBtns{display:flex;justify-content:center}
 #hubBtns [hidden]{display:none}
+/* S22 (R25): Short Night / Full Night choice above Descend; the timer turns red for the swarm and the boss */
+#modeBtns{display:flex;gap:8px;width:100%;max-width:400px}
+#modeBtns[hidden]{display:none}
+#modeBtns button{flex:1 1 0;min-height:50px;padding:6px 8px;border:1px solid var(--line);border-radius:2px;background:linear-gradient(180deg,rgba(32,22,16,.9),rgba(6,4,3,.9));box-shadow:inset 0 0 0 1px #000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--mute)}
+#modeBtns b{font:700 15px Cinzel,serif;letter-spacing:.04em}
+#modeBtns small{font-size:12px;letter-spacing:.02em}
+#modeBtns .on{border-color:var(--gold);color:#ffd9a8;box-shadow:inset 0 0 0 1px #000,inset 0 0 18px rgba(255,90,30,.22),0 0 0 1px var(--gold2)}
+#timer.hot{color:#ff7a5a;text-shadow:0 0 14px rgba(255,40,10,.8)}
 #endBurn{margin:0;color:#ff9a6a;font-size:15px;text-align:center}
 #endBurn:empty{display:none}
 .ib{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 50% 35%,#2a1d16,#070504);border:1px solid var(--line);box-shadow:inset 0 0 0 2px #000,0 0 10px rgba(0,0,0,.7);pointer-events:auto}
@@ -154,7 +162,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <div class="row">
     <button id="pauseB" class="ib" aria-label="Pause"><svg viewBox="0 0 20 20" fill="#e6d6b8"><rect x="4" y="3" width="4" height="14" rx="1"/><rect x="12" y="3" width="4" height="14" rx="1"/></svg></button>
     <div class="stat"><span id="killsT">0</span><small>slain</small></div>
-    <div id="timer">0:00</div>
+    <div id="timer">5:00</div>
     <div class="stat r"><span class="soul"></span><span id="soulsT">0</span></div>
     <button class="ib muteB" aria-label="Sound"></button>
   </div>
@@ -168,7 +176,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <header class="title"><h1>Ashen<br>Horde</h1><div class="orn"></div><p>Survive the night. Slay the Ash Lord.</p></header>
   <div class="purse"><span class="soul"></span><span id="purse">0</span>&nbsp;souls</div>
   <div id="hubSpace" role="img" aria-label="The town square: the heroes sit around a fire pit; the Gate, Chapel, Watchtower, Altar of Souls and Rampart stand around it"></div>
-  <div id="hubPanel"><b id="hubName"></b><p id="hubTxt"></p><div id="hubBtns"><button id="playB" class="big">Descend</button><button id="townBuy" class="ghost"></button></div></div>
+  <div id="hubPanel"><b id="hubName"></b><p id="hubTxt"></p><div id="modeBtns" role="group" aria-label="Length of the night"><button data-m="short" aria-pressed="true"><b>Short Night</b><small>5 min · 1 boss</small></button><button data-m="full" aria-pressed="false"><b>Full Night</b><small>30 min · 6 rounds</small></button></div><div id="hubBtns"><button id="playB" class="big">Descend</button><button id="townBuy" class="ghost"></button></div></div>
   <p id="best" class="best"></p>
   <p id="sync" class="note"></p>
 </div>
@@ -281,7 +289,7 @@ const meta=k=>save.meta[k]||0;
 
 /* device-only settings, kept apart so the save format stays the same */
 const SKEY='ashenHorde_settings';
-const SET=Object.assign({music:.7,sfx:.85,shake:true,gore:true},(()=>{try{return JSON.parse(localStorage.getItem(SKEY)||'{}')||{}}catch(e){return{}}})());
+const SET=Object.assign({music:.7,sfx:.85,shake:true,gore:true,mode:'short'},(()=>{try{return JSON.parse(localStorage.getItem(SKEY)||'{}')||{}}catch(e){return{}}})());
 const saveSet=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SET))}catch(e){}};
 
 /* ---------- data (numbers and balance unchanged) ---------- */
@@ -350,7 +358,30 @@ const EVENTS=[
   {t:200,k:'ring',e:'wraith',n:30,m:'Wraiths rise from the ash'},
   {t:222,k:'msg',m:'The ground trembles'}
 ];
-const BOSS_T=240;
+/* S22 (R25): the clock counts down to the Ash Lord. Short Night is one 5-minute round; Full Night is six 5-minute rounds,
+   each bringing a new kind of monster while the earlier kinds keep coming, opened by an elite and closed by a swarm from every side. */
+const ROUND_T=300,SWARM_T=20;
+const MODES={short:{name:'Short Night',rounds:1,win:120},full:{name:'Full Night',rounds:6,win:300}};
+const ROUNDS=[{n:'The restless dead',e:'ghoul'},{n:'The Fallen join them',e:'imp'},{n:'Wings in the dark',e:'bat'},{n:'Bone archers take aim',e:'archer'},{n:'Wraiths rise from the ash',e:'wraith'},{n:'The whole horde',e:null}];
+const runLen=()=>MODES[run.mode].rounds*ROUND_T;
+/* how far the danger has grown: Short Night keeps the old curve, Full Night stretches it over 30 minutes */
+const dangerT=()=>run.mode==='full'?330*Math.pow(Math.min(run.time,1800)/1800,.75):run.time;
+function runEvents(){
+  if(run.mode==='short')return EVENTS.map(e=>e.k==='msg'?Object.assign({},e,{t:ROUND_T-12}):e);
+  const ev=[];
+  for(let r=0;r<6;r++){const s=r*ROUND_T,k=ROUNDS[r].e;
+    ev.push({t:s+110,k:'ring',e:k,n:20+5*r,m:r?null:'They close in from every side'});
+    ev.push({t:s+200,k:'stream',e:r>=2?'bat':k,n:26+5*r,m:r===2?'A swarm descends':null})}
+  ev.push({t:6*ROUND_T-12,k:'msg',m:'The ground trembles'});
+  return ev.sort((a,b)=>a.t-b.t);
+}
+function runElites(){
+  const a=[];
+  if(run.mode==='short'){for(let t=75;t<ROUND_T-SWARM_T;t+=45)a.push({t,n:t>=180?2:1});return a}
+  for(let r=0;r<6;r++){const s=r*ROUND_T;
+    a.push(r?{t:s+1,n:1+(r>>1),open:1}:{t:60,n:1},{t:s+150,n:r>=3?2:1},{t:s+230,n:r>=4?2:1})}
+  return a;
+}
 /* gore look per enemy: blood colour (css), decal set, chunk colour, eye glow [x,y,glow] in units of r */
 const GORE={
   ghoul:{c:'#4a1408',d:'rot',ch:'#3a1a0e',eye:[.84,-.83,'gold']},
@@ -1062,16 +1093,18 @@ function recalc(){
 function addWeapon(id){run.weapons.push({id,lvl:1,t:.3});if(id==='skeletons')syncMinions()}
 function syncMinions(){const w=getW('skeletons');const n=w?T.skeletons.n[w.lvl]:0;while(minions.length<n){const m={x:P.x+rr(-30,30),y:P.y+rr(-30,30),atk:0,face:1,tgt:null,swing:0,walk:rand()*5};minions.push(m);burst(m.x,m.y,14,'109,255,125',70,.5,2,true,-1)}}
 
-function newRun(hero){
+function newRun(hero,mode){
+  mode=MODES[mode]?mode:'short';
   enemies=[];gems=[];projs=[];eprojs=[];effects=[];nP=0;texts=[];decals=[];minions=[];S=null;hitStop=0;flashA=0;
-  run={hero,time:0,kills:0,xp:0,level:1,pending:0,souls:0,spawnT:.5,ev:0,nextElite:75,boss:null,bossSpawned:false,shake:0,rerolls:meta('fate')+townLv('chapel'),revives:meta('revive'),weapons:[],passives:{},over:false,won:false,endT:0,hurt:0,hint:save.runs<3?6:0,bellT:18,
+  run={hero,time:0,kills:0,xp:0,level:1,pending:0,souls:0,spawnT:.5,mode,round:-1,ev:0,evs:[],ei:0,elites:[],swarm:-1,boss:null,bossSpawned:false,shake:0,rerolls:meta('fate')+townLv('chapel'),revives:meta('revive'),weapons:[],passives:{},over:false,won:false,endT:0,hurt:0,hint:save.runs<3?6:0,bellT:18,
     cine:0,roarT:0,growlT:2,hbT:0,hbP:0,stepT:0};
   P={x:0,y:0,r:12,hp:1,fx:1,fy:0,face:1,walk:0,inv:0,moving:false,atkT:0,atkA:0};
+  run.evs=runEvents();run.elites=runElites();
   for(const w of HEROES[hero].start)addWeapon(w);
   recalc();P.hp=S.maxHp;syncMinions();
   hud.last={};$('bossbar').style.display='none';
   effects.push({k:'rise',x:0,y:0,life:1.2,max:1.2});burst(0,0,30,'255,130,50',120,.8,2.2,true,-1);
-  setState('play');
+  updateHud();setState('play');
 }
 function hudOn(s){return['play','levelup','chest','pause'].includes(s)||(s==='settings'&&setFrom==='pause')}
 function setState(s){
@@ -1087,32 +1120,50 @@ function banner(t,sub,boss){const b=$('banner');b.querySelector('b').textContent
 
 /* ---------- spawning (unchanged rules) ---------- */
 function spawnEnemy(type,x,y){
-  const d=ETYPES[type],t=run.time,hpm=d.boss?1:d.elite?1+t/150:1+t/75;
+  const d=ETYPES[type],t=dangerT(),hpm=d.boss?1:d.elite?1+t/150:1+t/75;
   const e={id:nextId++,type,x,y,r:d.r,hp:d.hp*hpm,maxHp:d.hp*hpm,spd:d.spd*(d.boss?1:1+Math.min(.35,t/600)),dmg:d.dmg*(1+t/400),xp:d.xp,mass:d.mass||1,kx:0,ky:0,atk:0,flash:0,lunge:0,hitT:0,la:0,slow:0,seed:rand()*10,face:1,skT:0,shootT:rr(1.2,2.6),elite:!!d.elite,boss:!!d.boss,ghost:!!d.ghost,dead:false,by:0,stepD:0,born:0};
   enemies.push(e);return e;
 }
-function spawnType(t){const w=[['ghoul',6],['imp',t<20?2:4]];if(t>30)w.push(['bat',3]);if(t>60)w.push(['archer',t>150?3:2]);if(t>120)w.push(['wraith',t>180?4:2]);let s=w.reduce((a,b)=>a+b[1],0)*rand();for(const[k,v]of w){if((s-=v)<=0)return k}return'ghoul'}
+function spawnType(t){
+  if(run.mode==='full'){const r=Math.max(0,run.round),w=[];for(let i=0;i<5&&i<=r;i++)w.push([ROUNDS[i].e,r>=5?3:i===r?7:i===r-1?3:1.5]);
+    let s=w.reduce((a,b)=>a+b[1],0)*rand();for(const[k,v]of w){if((s-=v)<=0)return k}return'ghoul'}
+  const w=[['ghoul',6],['imp',t<20?2:4]];if(t>30)w.push(['bat',3]);if(t>60)w.push(['archer',t>150?3:2]);if(t>120)w.push(['wraith',t>180?4:2]);let s=w.reduce((a,b)=>a+b[1],0)*rand();for(const[k,v]of w){if((s-=v)<=0)return k}return'ghoul'}
 function spawnUpdate(dt){
-  const t=run.time,R=spawnR();
+  const t=run.time,td=dangerT(),R=spawnR(),len=runLen(),M=MODES[run.mode];
   run.spawnT-=dt;
-  const cap=run.boss?60:Math.min(MAXE,20+t*1.15);
+  const cap=run.boss?60:Math.min(MAXE,20+td*1.15);
   if(run.spawnT<=0){
-    run.spawnT=run.boss?1.3:Math.max(.16,.95-t/280);
-    if(enemies.length<cap){const n=1+Math.min(6,Math.floor(t/40)),a=rand()*TAU,type=spawnType(t);for(let i=0;i<n;i++)spawnEnemy(type,P.x+Math.cos(a)*R+rr(-35,35),P.y+Math.sin(a)*R+rr(-35,35))}
+    run.spawnT=run.boss?1.3:Math.max(.16,.95-td/280);
+    if(enemies.length<cap){const n=1+Math.min(6,Math.floor(td/40)),a=rand()*TAU,type=spawnType(td);for(let i=0;i<n;i++)spawnEnemy(type,P.x+Math.cos(a)*R+rr(-35,35),P.y+Math.sin(a)*R+rr(-35,35))}
   }
-  while(run.ev<EVENTS.length&&t>=EVENTS[run.ev].t){
-    const ev=EVENTS[run.ev++];if(ev.m)banner(ev.m);
-    if(ev.k==='ring'){for(let i=0;i<ev.n;i++){const a=i/ev.n*TAU;spawnEnemy(ev.e,P.x+Math.cos(a)*R*.82,P.y+Math.sin(a)*R*.82)}sfx.growl(ev.e,1)}
-    else if(ev.k==='stream'){const a=rand()*TAU;for(let i=0;i<ev.n;i++){const d=R+i*14,o=rr(-90,90);spawnEnemy(ev.e,P.x+Math.cos(a)*d-Math.sin(a)*o,P.y+Math.sin(a)*d+Math.cos(a)*o)}sfx.growl(ev.e,1)}
+  /* S22 (R25): rounds; Full Night announces each one */
+  const rd=Math.min(M.rounds-1,Math.floor(t/ROUND_T));
+  if(rd!==run.round&&!run.bossSpawned){run.round=rd;
+    if(run.mode==='full'){const o=run.elites[run.ei],lead=rd&&o&&o.open?(o.n>1?' · Pit Overseers lead them':' · a Pit Overseer leads them'):'';banner(`Round ${rd+1} of ${M.rounds}`,ROUNDS[rd].n+lead);sfx.step(.7)}}
+  while(run.ev<run.evs.length&&t>=run.evs[run.ev].t){
+    const ev=run.evs[run.ev++];if(ev.m)banner(ev.m);
+    const kind=()=>ev.e||spawnType(td);
+    if(ev.k==='ring'){for(let i=0;i<ev.n;i++){const a=i/ev.n*TAU;spawnEnemy(kind(),P.x+Math.cos(a)*R*.82,P.y+Math.sin(a)*R*.82)}sfx.growl(ev.e||'wraith',1)}
+    else if(ev.k==='stream'){const a=rand()*TAU;for(let i=0;i<ev.n;i++){const d=R+i*14,o=rr(-90,90);spawnEnemy(kind(),P.x+Math.cos(a)*d-Math.sin(a)*o,P.y+Math.sin(a)*d+Math.cos(a)*o)}sfx.growl(ev.e||'wraith',1)}
     else if(ev.k==='msg'){run.shake=4;sfx.step(.8);setTimeout(()=>sfx.step(.6),500)}
   }
-  if(t>=run.nextElite&&!run.bossSpawned){
-    run.nextElite+=45;const n=t>=180?2:1;
-    for(let i=0;i<n;i++){const a=rand()*TAU;spawnEnemy('brute',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R)}
-    banner(n>1?'Pit Overseers approach':'A Pit Overseer approaches','Slay it for a Hellforged Chest');sfx.growl('brute',1);
+  /* S22 (R25): the last 20 seconds of every round, rings of the round's monsters close in from every side, one every 4 seconds */
+  const sk=Math.floor((t-((rd+1)*ROUND_T-SWARM_T))/4);
+  if(!run.bossSpawned&&sk>=0&&sk<5&&run.swarm!==rd*10+sk){
+    const first=run.swarm<rd*10;run.swarm=rd*10+sk;
+    if(first)banner('The horde closes in',rd===M.rounds-1?'The Ash Lord is coming':`Round ${rd+2} is coming`,true);
+    const n=Math.min(run.mode==='full'?16+5*rd:24,Math.max(0,MAXE+40-enemies.length)),a0=rand()*TAU;let k0='ghoul';
+    for(let i=0;i<n;i++){const a=a0+i/n*TAU,d=R*rr(.8,.95),k=spawnType(td);if(!i)k0=k;spawnEnemy(k,P.x+Math.cos(a)*d,P.y+Math.sin(a)*d)}
+    if(n){sfx.growl(k0,1);run.shake=Math.max(run.shake,3)}
   }
-  if(t>=BOSS_T&&!run.bossSpawned){
+  while(run.ei<run.elites.length&&t>=run.elites[run.ei].t&&!run.bossSpawned){
+    const o=run.elites[run.ei++];
+    for(let i=0;i<o.n;i++){const a=rand()*TAU;spawnEnemy('brute',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R)}
+    if(!o.open)banner(o.n>1?'Pit Overseers approach':'A Pit Overseer approaches','Slay it for a Hellforged Chest');sfx.growl('brute',1);
+  }
+  if(t>=len&&!run.bossSpawned){
     run.bossSpawned=true;const a=-Math.PI/2;run.boss=spawnEnemy('boss',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R);
+    if(run.mode==='full'){run.boss.hp*=1.6;run.boss.maxHp*=1.6}
     Object.assign(run.boss,{mode:'walk',modeT:0,tAtk:2.5,ring2:0,born:2.2});
     /* dramatic entrance: portal, letterbox, darkness swells, roar */
     run.cine=3.4;run.roarT=.9;effects.push({k:'portal',x:run.boss.x,y:run.boss.y,life:2.6,max:2.6});addDecal('scorch',run.boss.x,run.boss.y+20,160,60);
@@ -1242,7 +1293,7 @@ function update(dt){
   if(run.hint>0)run.hint-=dt;
   if(run.cine>0)run.cine-=dt;
   if(run.roarT>0){run.roarT-=dt;if(run.roarT<=0){sfx.roar();run.shake=14;stop(.12)}}
-  if(!run.over&&!run.won)musSet('run',clamp(run.time/220,0,1),!!run.boss);
+  if(!run.over&&!run.won)musSet('run',clamp(dangerT()/220,0,1),!!run.boss);
   // player
   if(!run.over){
     let jx=0,jy=0;
@@ -1258,7 +1309,7 @@ function update(dt){
     run.hbP=Math.max(0,run.hbP-dt*2.5);
   }
   if(!run.over&&!run.won){spawnUpdate(dt);run.bellT-=dt;if(run.bellT<=0){run.bellT=26;sfx.bell()}
-    run.growlT-=dt;if(run.growlT<=0&&enemies.length){run.growlT=rr(.9,2.2)-clamp(run.time/240,0,1)*.5;const e=enemies[(rand()*enemies.length)|0],d=Math.hypot(e.x-P.x,e.y-P.y);if(d<380&&!e.boss)sfx.growl(e.type,1-d/420)}}
+    run.growlT-=dt;if(run.growlT<=0&&enemies.length){run.growlT=rr(.9,2.2)-clamp(dangerT()/240,0,1)*.5;const e=enemies[(rand()*enemies.length)|0],d=Math.hypot(e.x-P.x,e.y-P.y);if(d<380&&!e.boss)sfx.growl(e.type,1-d/420)}}
   buildGrid();
   // enemies
   const far=spawnR()*1.55;
@@ -1383,7 +1434,7 @@ function openLevelUp(){
 }
 $('rerollB').onclick=()=>{if(run.rerolls<=0)return;run.rerolls--;openLevelUp()};
 function openChest(){
-  const n=rand()<.3||run.time>180?3:1,list=$('chestList');list.innerHTML='';
+  const n=rand()<.3||dangerT()>180?3:1,list=$('chestList');list.innerHTML='';
   for(let i=0;i<n;i++){const o=rollOffers(1)[0];applyOffer(o);const d=document.createElement('div');cardHtml(o,d);list.appendChild(d)}
   setState('chest');sfx.chest();flashA=.4;flashC='255,200,90';
 }
@@ -1394,21 +1445,22 @@ const hud={last:{}};
 const fmt=s=>{s=Math.floor(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 function setT(id,v){if(hud.last[id]!==v){hud.last[id]=v;$(id).textContent=v}}
 function updateHud(){
-  setT('timer',fmt(run.time));setT('killsT',run.kills);setT('soulsT',run.souls);setT('lvlT','Lv '+run.level);
+  const left=Math.max(0,runLen()-run.time),hot=run.bossSpawned||run.time%ROUND_T>=ROUND_T-SWARM_T;setT('timer',fmt(Math.ceil(left)));if(hud.last.hot!==hot){hud.last.hot=hot;$('timer').classList.toggle('hot',hot)}setT('killsT',run.kills);setT('soulsT',run.souls);setT('lvlT','Lv '+run.level);
   const xp=Math.round(run.xp/need(run.level)*1000)/10+'%';if(hud.last.xp!==xp){hud.last.xp=xp;$('xpbar').firstElementChild.style.width=xp}
   if(run.boss){const b=Math.max(0,run.boss.hp/run.boss.maxHp*100).toFixed(1)+'%';if(hud.last.b!==b){hud.last.b=b;$('bossFill').style.width=b}}
 }
-function soulsEarned(){const base=run.souls+Math.floor(run.kills/15)+Math.floor(run.time/10)+(run.won?120:0);return{base,total:Math.round(base*(1+.15*meta('greed')+.1*townLv('watch')))}}
+function soulsEarned(){const base=run.souls+Math.floor(run.kills/15)+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(base*(1+.15*meta('greed')+.1*townLv('watch')))}}
 function showEnd(win){
   const e=soulsEarned();save.souls+=e.total;save.runs++;save.best.time=Math.max(save.best.time,Math.floor(run.time));save.best.kills=Math.max(save.best.kills,run.kills);if(win)save.best.wins=(save.best.wins||0)+1;
   /* S07: a lost night burns one standing building (its bonus drops a level until repaired) */
   run.burned=null;if(!win){const c=TOWN.filter(b=>townRaw(b.k)>0&&!townHurt(b.k));if(c.length){const b=c[(rand()*c.length)|0];save.dmg=save.dmg||{};save.dmg[b.k]=1;run.burned=b.k}}
   persist();
   $('endT').textContent=win?'Victory':'You have fallen';$('endM').querySelector('.box').classList.toggle('dead',!win);
-  $('endS').textContent=win?'Malgrath, the Ash Lord, is slain. The night is yours.':run.time>=BOSS_T?'The Ash Lord claims another soul.':`The Ash Lord waited at ${fmt(BOSS_T)}.`;
+  const md=MODES[run.mode],left=fmt(Math.ceil(Math.max(0,runLen()-run.time)));
+  $('endS').textContent=win?`Malgrath, the Ash Lord, is slain. The ${md.name} is yours.`:run.bossSpawned?'The Ash Lord claims another soul.':run.mode==='full'?`${md.name}: fallen in round ${run.round+1} of ${md.rounds}, ${left} before the Ash Lord.`:`${md.name}: the Ash Lord was ${left} away.`;
   $('endStats').innerHTML=[[fmt(run.time),'survived'],[run.kills,'slain'],['Lv '+run.level,'reached'],[HEROES[run.hero].name,'hero']].map(([b,s])=>`<div><b>${b}</b><small>${s}</small></div>`).join('');
   $('endSouls').textContent=e.total;
-  $('endBreak').textContent=`${run.souls} gathered · ${Math.floor(run.kills/15)} from kills · ${Math.floor(run.time/10)} for time${win?' · 120 for the Ash Lord':''}${meta('greed')?' · Greed bonus':''}${townLv('watch')?' · Watchtower bonus':''}`;
+  $('endBreak').textContent=`${run.souls} gathered · ${Math.floor(run.kills/15)} from kills · ${Math.floor(run.time/10)} for time${win?` · ${md.win} for the Ash Lord`:''}${meta('greed')?' · Greed bonus':''}${townLv('watch')?' · Watchtower bonus':''}`;
   $('endBurn').textContent=run.burned?`The horde burned the ${HUBN[run.burned]}. Repair it in town.`:'';
   setState('end');
 }
@@ -1435,7 +1487,7 @@ function hubInfo(){
   const nm=$('hubName'),tx=$('hubTxt'),pb=$('playB'),tb=$('townBuy');
   if(hubSel.t==='b'){const k=hubSel.k,b=TOWN.find(x=>x.k===k),r=townRaw(k),hurt=townHurt(k),st=hurt?'Burning':['In ruins','Rebuilt','Fortified'][r];
     nm.textContent=b.n;tx.textContent=`${st}. ${b.fx}.${hurt?' The horde set it alight: one level of its bonus is lost until you repair it.':''}`;
-    pb.hidden=true;tb.hidden=false;
+    pb.hidden=true;tb.hidden=false;$('modeBtns').hidden=true;
     if(hurt){const c=repairCost(r);tb.innerHTML=`Repair · <span class="soul"></span>${c}`;tb.disabled=save.souls<c}
     else if(r>=2){tb.textContent='Fortified';tb.disabled=true}
     else{const c=townCost(r);tb.innerHTML=`${r?'Fortify':'Rebuild'} · <span class="soul"></span>${c}`;tb.disabled=save.souls<c}
@@ -1445,7 +1497,10 @@ function hubInfo(){
   if(hubSel.t==='gate'){nm.textContent='The Gate';tx.textContent=`Beyond it, the night and the horde. ${h.name} ${own?'is ready.':'must be unlocked first.'}`}
   else{nm.textContent=h.name;tx.textContent=`${h.perk}. Tap a building to visit it.`}
   if(own){pb.textContent='Descend';pb.disabled=false}else{pb.textContent=`Unlock · ${h.cost} souls`;pb.disabled=save.souls<h.cost}
+  $('modeBtns').hidden=!own;syncMode();
 }
+function syncMode(){const m=MODES[SET.mode]?SET.mode:'short';for(const b of $('modeBtns').children){const on=b.dataset.m===m;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}}
+$('modeBtns').onclick=e=>{const b=e.target.closest('button');if(!b)return;auInit();SET.mode=b.dataset.m;saveSet();syncMode()};
 function hubGeom(){const r=$('hubSpace').getBoundingClientRect(),s=clamp(Math.min(r.width/440,r.height/340),.6,1.15);
   const G={x:r.left,y:r.top,w:r.width,h:r.height,s,cx:r.left+r.width/2,fy:r.top+r.height*.66,back:r.top+Math.max(152*s,r.height*.36),front:r.bottom-14};
   G.rx=Math.min(r.width*.34,190*s);G.ry=G.rx*.48;return G}
@@ -1551,7 +1606,7 @@ function buildAltar(){
     row.querySelector('button').onclick=()=>{if(max||save.souls<cost)return;auInit();save.souls-=cost;save.meta[k]=l+1;persist();sfx.chest();buildAltar()};
     list.appendChild(row)}
 }
-$('playB').onclick=()=>{auInit();const id=save.hero,h=HEROES[id];if(!save.heroes[id]){if(save.souls>=h.cost){save.souls-=h.cost;save.heroes[id]=true;persist();sfx.chest();buildMenu()}return}newRun(id)};
+$('playB').onclick=()=>{auInit();const id=save.hero,h=HEROES[id];if(!save.heroes[id]){if(save.souls>=h.cost){save.souls-=h.cost;save.heroes[id]=true;persist();sfx.chest();buildMenu()}return}newRun(id,SET.mode)};
 $('altarBack').onclick=()=>{buildMenu();setState('menu')};
 $('pauseB').onclick=()=>{if(state!=='play')return;const bl=$('buildList');bl.innerHTML='';
   for(const w of run.weapons){const d=document.createElement('div');d.appendChild(icon(w.id,44));d.insertAdjacentHTML('beforeend',`<span>${w.lvl}</span>`);bl.appendChild(d)}
@@ -1559,7 +1614,7 @@ $('pauseB').onclick=()=>{if(state!=='play')return;const bl=$('buildList');bl.inn
   setState('pause')};
 $('resumeB').onclick=()=>{auInit();setState('play')};
 $('quitB').onclick=()=>{run.over=true;showEnd(false)};
-$('againB').onclick=()=>{auInit();newRun(run.hero)};
+$('againB').onclick=()=>{auInit();newRun(run.hero,run.mode)};
 $('homeB').onclick=()=>{hubSel=run&&run.burned?{t:'b',k:run.burned}:{t:'hero'};run=null;buildMenu();setState('menu')};
 document.querySelectorAll('.muteB').forEach(b=>b.onclick=e=>{e.stopPropagation();auInit();setMute(!save.muted)});
 /* settings: separate music / effects volume, mute, screen shake (stored on this device only) */
@@ -1847,7 +1902,7 @@ buildSprites();buildMisc();resize();setMute(save.muted,true);syncSet();buildMenu
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>buildMenu());
 requestAnimationFrame(frame);
 if(DEBUG)window.__AH={SPR,CORPSE,GROUND,DEC,DECOR,get fps(){return fpsV},get q(){return Q},get state(){return state},get run(){return run},get P(){return P},get effects(){return effects},get enemies(){return enemies},stats:()=>({fps:Math.round(fpsV),q:Q,enemies:enemies.length,parts:nP,lights:nL,voices:AU.voices,decals:decals.length,dpr:DPR}),
-  jump(t){if(!run)return;run.time=t;run.nextElite=Math.max(run.nextElite,t+1)},god(){if(S){S.maxHp=99999;P.hp=99999;S.armor=999}},lvl(){if(run)run.pending++},setQ(q){Q=q;QS=QL[q];resize()},hurtMe(f){P.hp=S.maxHp*f},chest(){if(run)drop('chest',P.x+20,P.y)}};
+  jump(t){if(!run)return;run.time=t;while(run.ei<run.elites.length&&run.elites[run.ei].t<t)run.ei++;while(run.ev<run.evs.length&&run.evs[run.ev].t<t)run.ev++},god(){if(S){S.maxHp=99999;P.hp=99999;S.armor=999}},lvl(){if(run)run.pending++},setQ(q){Q=q;QS=QL[q];resize()},hurtMe(f){P.hp=S.maxHp*f},chest(){if(run)drop('chest',P.x+20,P.y)}};
 }
 </script>
 </body>
