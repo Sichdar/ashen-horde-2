@@ -1373,7 +1373,7 @@ function newRun(hero,mode){
   enemies=[];gems=[];projs=[];eprojs=[];effects=[];nP=0;texts=[];decals=[];minions=[];zones=[];S=null;hitStop=0;flashA=0;
   run={hero,time:0,kills:0,xp:0,level:1,pending:0,souls:0,spawnT:.5,mode,round:-1,ev:0,evs:[],ei:0,elites:[],swarm:-1,boss:null,bossSpawned:false,shake:0,rerolls:meta('fate')+townLv('chapel'),revives:meta('revive'),weapons:[],passives:{},over:false,won:false,endT:0,hurt:0,hint:save.runs<3?6:0,bellT:18,
     cine:0,roarT:0,growlT:2,hbT:0,hbP:0,stepT:0,cryT:0,leap:null,dash:null,cb:[],furyT:0,charm:0,
-    leg:{},set3:null,bone:0,boneT:0,ovT:0,vanT:0,rageN:0,rageT:0,sure:0,spin2:0,spin2h:0,wint:0,cacheD:0};
+    leg:{},set3:null,bone:0,boneT:0,ovT:0,vanT:0,rageN:0,rageT:0,sure:0,spin2:0,spin2h:0,wint:0,cacheD:0,wrath:0,kb:new Array(20).fill(0),kbi:0,kbT:0,wrathOn:false};
   P={x:0,y:0,r:12,hp:1,fx:1,fy:0,face:1,walk:0,inv:0,safe:0,moving:false,atkT:0,atkA:0};
   run.evs=runEvents();run.elites=runElites();
   /* S25 (R27): Legendary effects and the 3-piece set skill for this night */
@@ -1413,10 +1413,20 @@ function spawnType(t){
 function spawnUpdate(dt){
   const t=run.time,td=dangerT(),R=spawnR(),len=runLen(),M=MODES[run.mode];
   run.spawnT-=dt;
-  const cap=run.boss?60:Math.min(MAXE,20+td*1.15);
+  /* S28 (R30): the horde's wrath. Kills are counted over the last 20 seconds; when you kill about as fast as the horde arrives
+     and few monsters reach you (fewer than about 24 close by), wrath rises slowly (about 40 s to full) and sends more and bigger packs, up to about twice as many.
+     When monsters pile up it falls about 3 times faster. Monster health and damage are untouched; it fades while the Ash Lord fights. */
+  run.kbT+=dt;if(run.kbT>=1){run.kbT-=1;run.kbi=(run.kbi+1)%20;run.kb[run.kbi]=0}
+  const cap0=Math.min(MAXE,20+td*1.15),sp0=Math.max(.16,.95-td/280),n0=1+Math.min(6,Math.floor(td/40));
+  if(run.boss)run.wrath=Math.max(0,run.wrath-dt/6);
+  else if(t>30){let near=0;for(const e of enemies)if(!e.dead&&Math.abs(e.x-P.x)<180&&Math.abs(e.y-P.y)<180)near++;
+    const kps=run.kb.reduce((a,b)=>a+b,0)/20,pace=Math.min(1,kps/(n0/sp0)),clear=clamp(1-near/24,0,1),goal=clamp((pace*clear-.3)/.4,0,1);
+    run.wrath+=clamp(goal-run.wrath,-dt/12,dt/40)}
+  const wr=run.wrath,cap=run.boss?60:Math.min(MAXE,cap0*(1+.35*wr));
+  if(!run.boss){if(!run.wrathOn&&wr>.6){run.wrathOn=true;banner('The horde grows wrathful','It has felt your blade')}else if(run.wrathOn&&wr<.25)run.wrathOn=false}
   if(run.spawnT<=0){
-    run.spawnT=run.boss?1.3:Math.max(.16,.95-td/280);
-    if(enemies.length<cap){const n=1+Math.min(6,Math.floor(td/40)),a=rand()*TAU,type=spawnType(td);for(let i=0;i<n;i++)spawnEnemy(type,P.x+Math.cos(a)*R+rr(-35,35),P.y+Math.sin(a)*R+rr(-35,35))}
+    run.spawnT=run.boss?1.3:sp0/(1+.5*wr);
+    if(enemies.length<cap){const n=Math.round(n0*(1+.4*wr)),a=rand()*TAU,type=spawnType(td);for(let i=0;i<n;i++)spawnEnemy(type,P.x+Math.cos(a)*R+rr(-35,35),P.y+Math.sin(a)*R+rr(-35,35))}
   }
   /* S22 (R25): rounds; Full Night announces each one */
   const rd=Math.min(M.rounds-1,Math.floor(t/ROUND_T));
@@ -1492,7 +1502,7 @@ function dropGem(x,y,v){
 }
 function drop(k,x,y){gems.push({k,x:x+rr(-14,14),y:y+rr(-14,14),v:1,mag:false,sp:0,ph:rand()*6})}
 function kill(e,quiet){
-  if(e.dead)return;e.dead=true;run.kills++;
+  if(e.dead)return;e.dead=true;run.kills++;if(!e.boss)run.kb[run.kbi]++;
   if(!quiet||rand()<.25)gore(e,!quiet,e.lastA);
   if(!quiet)sfx.die(e.type);
   if(e.xp)dropGem(e.x,e.y,e.xp);
