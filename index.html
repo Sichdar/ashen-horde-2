@@ -63,7 +63,7 @@ h1,h2,h3{font-family:Cinzel,Georgia,serif;margin:0;line-height:1.05;text-wrap:ba
 #hubPanel{width:min(100%,440px);display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 14px 14px;border:1px solid var(--line);border-radius:3px;background:linear-gradient(180deg,rgba(26,18,13,.9),rgba(6,4,3,.94));box-shadow:inset 0 0 0 1px #000,0 0 22px rgba(0,0,0,.7)}
 #hubName{font:700 18px Cinzel,serif;color:#ffd9a8;letter-spacing:.04em;text-shadow:0 0 10px rgba(255,90,30,.5)}
 #hubTxt{margin:0;font-size:15px;text-align:center;color:var(--ink);min-height:2.9em}
-#hubBtns{display:flex;justify-content:center}
+#hubBtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 #hubBtns [hidden]{display:none}
 /* S22 (R25): Short Night / Full Night choice above Descend; the timer turns red for the swarm and the boss */
 #modeBtns{display:flex;gap:8px;width:100%;max-width:400px}
@@ -143,8 +143,23 @@ h1,h2,h3{font-family:Cinzel,Georgia,serif;margin:0;line-height:1.05;text-wrap:ba
 @media (hover:none){#belt span{display:none}}
 #beltShop{display:flex;gap:14px;justify-content:center}
 #beltShop div.empty::after{content:'';width:14px;height:14px;border:1px dashed rgba(201,154,62,.45);border-radius:50%}
-#shop h2{font-size:clamp(30px,8vw,42px);margin-top:8px;background:linear-gradient(180deg,#ffe2b0,#d8a24e 55%,#8a3a16);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,70,20,.45)) drop-shadow(0 2px 0 #000)}
-#shop .note{max-width:440px}
+#shop h2,#gamb h2{font-size:clamp(30px,8vw,42px);margin-top:8px;background:linear-gradient(180deg,#ffe2b0,#d8a24e 55%,#8a3a16);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,70,20,.45)) drop-shadow(0 2px 0 #000)}
+#shop .note,#gamb .note{max-width:440px}
+/* S25 (R27): the Gambler's page (your gear, the gambles, the bag), the reveal of a new piece, and the set-skill mark in the night */
+#gearList,#gambList,#bagList{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px}
+.meta .tier{font:italic 400 12px Spectral,Georgia,serif;margin-left:6px}
+.gx{margin:2px 0 4px;padding:0;list-style:none;font:400 14px/1.3 Spectral,Georgia,serif;color:var(--mute)}
+.gx li.up{color:#8fe39a}.gx li.down{color:#ff8a7a}.gx li.fx{color:#ffc27a}.gx li.set{color:#7fd88a}.gx li.off{color:#7d7060}
+.gbtns{display:flex;flex-direction:column;gap:6px}
+.buy.alt{background:linear-gradient(180deg,rgba(40,28,20,.95),rgba(8,5,4,.95));border-color:var(--line);color:#f0dcb4}
+#gearM .tn{font:700 clamp(22px,6.5vw,30px) Cinzel,serif;letter-spacing:.03em;text-shadow:0 0 16px rgba(0,0,0,.9),0 2px 0 #000}
+#gearM .gx{text-align:left;font-size:15px;margin:0 auto;max-width:360px}
+#gearM .ico{display:flex;justify-content:center}
+#gearM .row2{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+#gearM .big{min-width:0}
+#endCache{margin:0;color:#ffd27a;font-size:15px;text-align:center}#endCache:empty{display:none}
+#setI{position:absolute;left:calc(env(safe-area-inset-left) + 12px);top:calc(env(safe-area-inset-top) + 78px);display:flex;align-items:center;gap:6px;font:700 12px Cinzel,serif;color:var(--gold);text-shadow:0 1px 2px #000;opacity:.45;transition:opacity .2s}
+#setI.ready{opacity:1}#setI[hidden]{display:none}
 #wareList{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px}
 #metaList,#kitList{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px}
 .altH{margin:6px 0 0;font:700 18px Cinzel,serif;letter-spacing:.08em;color:var(--gold)}
@@ -190,6 +205,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <div id="bossbar"><b>Malgrath, the Ash Lord</b><div><i id="bossFill"></i></div></div>
   <div id="banner"><b></b><small></small></div>
   <div id="belt" role="group" aria-label="Belt" hidden><button data-i="0"></button><button data-i="1"></button><button data-i="2"></button></div>
+  <div id="setI" role="img" hidden></div>
 </div>
 
 <div id="menu" class="screen on">
@@ -197,8 +213,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <button class="ib setB corner r2" aria-label="Settings"><svg viewBox="0 0 20 20" fill="none" stroke="#e6d6b8" stroke-width="1.7"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/><circle cx="10" cy="10" r="5.4"/></svg></button>
   <header class="title"><h1>Ashen<br>Horde</h1><div class="orn"></div><p>Survive the night. Slay the Ash Lord.</p></header>
   <div class="purse"><span class="soul"></span><span id="purse">0</span>&nbsp;souls</div>
-  <div id="hubSpace" role="img" aria-label="The town square: the heroes sit around a fire pit; the Gate, Chapel, Watchtower, Altar of Souls and Rampart stand around it, and the Merchant waits by his cart"></div>
-  <div id="hubPanel"><b id="hubName"></b><p id="hubTxt"></p><div id="modeBtns" role="group" aria-label="Length of the night"><button data-m="short" aria-pressed="true"><b>Short Night</b><small>5 min · 1 boss</small></button><button data-m="full" aria-pressed="false"><b>Full Night</b><small>30 min · 6 rounds</small></button></div><div id="hubBtns"><button id="playB" class="big">Descend</button><button id="townBuy" class="ghost"></button></div></div>
+  <div id="hubSpace" role="img" aria-label="The town square: the heroes sit around a fire pit; the Gate, Chapel, Watchtower, Altar of Souls and Rampart stand around it, the Merchant waits by his cart and the Gambler sits at his table"></div>
+  <div id="hubPanel"><b id="hubName"></b><p id="hubTxt"></p><div id="modeBtns" role="group" aria-label="Length of the night"><button data-m="short" aria-pressed="true"><b>Short Night</b><small>5 min · 1 boss</small></button><button data-m="full" aria-pressed="false"><b>Full Night</b><small>30 min · 6 rounds</small></button></div><div id="hubBtns"><button id="playB" class="big">Descend</button><button id="townBuy" class="ghost"></button><button id="gearB" class="ghost">Gear</button></div></div>
   <p id="best" class="best"></p>
   <p id="sync" class="note"></p>
 </div>
@@ -229,6 +245,32 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <div id="wareList"></div>
   <button id="shopBack" class="ghost">Back to town</button>
 </div>
+
+<div id="gamb" class="screen">
+  <h2>The Gambler</h2>
+  <div class="orn"></div>
+  <p class="note">“Sealed and unseen, wanderer. Pay, and let fate decide.”</p>
+  <div class="purse"><span class="soul"></span><span id="purse4">0</span>&nbsp;souls</div>
+  <h3 class="altH" id="gearH">Your gear</h3>
+  <div id="gearList"></div>
+  <h3 class="altH">Gamble</h3>
+  <div id="gambList"></div>
+  <p class="note" id="gambNote"></p>
+  <h3 class="altH" id="bagH">Bag</h3>
+  <div id="bagList"></div>
+  <p class="note">Gear stays with the hero who wears it, night after night. Choose another hero by the fire to see their gear.</p>
+  <button id="gambBack" class="ghost">Back to town</button>
+</div>
+
+<div id="gearM" class="modal"><div class="box frame">
+  <p class="sub" id="gmSub"></p>
+  <div class="ico" id="gmIco"></div>
+  <div class="tn" id="gmName"></div>
+  <ul class="gx" id="gmList"></ul>
+  <p class="note" id="gmNow"></p>
+  <button id="gmWear" class="big">Wear it</button>
+  <div class="row2"><button id="gmKeep" class="ghost">Keep in the bag</button><button id="gmAsh" class="ghost">Turn to ash · 15 souls</button></div>
+</div></div>
 
 <div id="lvlM" class="modal"><div class="box frame">
   <h2>Level <span id="lvN">2</span></h2>
@@ -272,6 +314,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <div id="endStats" class="stats"></div>
   <div class="earn"><span class="soul"></span><div>+<span id="endSouls">0</span> souls<small id="endBreak"></small></div></div>
   <p id="endBurn"></p>
+  <p id="endCache"></p>
   <button id="againB" class="big">Descend again</button>
   <button id="homeB" class="ghost">Return to town</button>
 </div></div>
@@ -290,7 +333,7 @@ const DEBUG=/debug/.test(location.hash);
 
 /* ---------- save (format unchanged: key ashenHorde_v1 + cloud data/users/<id>/save) ---------- */
 const KEY='ashenHorde_v1';
-const defaults=()=>({souls:0,heroes:{barbarian:true},meta:{},town:{},dmg:{},kit:{},belt:[null,null,null],best:{time:0,kills:0,wins:0},muted:false,runs:0,hero:'barbarian',ts:0});
+const defaults=()=>({souls:0,heroes:{barbarian:true},meta:{},town:{},dmg:{},kit:{},belt:[null,null,null],gear:{},bag:[],gamb:{n:0},cache:[],pend:null,best:{time:0,kills:0,wins:0},muted:false,runs:0,hero:'barbarian',ts:0});
 let save=defaults();
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)save=Object.assign(save,s)}catch(e){}
 let cloud=null,cloudBusy=false,cloudDirty=false;
@@ -319,7 +362,7 @@ async function initCloud(){
     const d=snap.exists?snap.data():null;
     if(d&&(d.ts||0)>(save.ts||0)){
       save=Object.assign(defaults(),JSON.parse(JSON.stringify(d)));saveLocal();setMute(save.muted,true);
-      if(state==='menu')buildMenu();else if(state==='altar')buildAltar();else if(state==='shop')buildShop();
+      if(state==='menu')buildMenu();else if(state==='altar')buildAltar();else if(state==='shop')buildShop();else if(state==='gamb')buildGamb();
       setCloud('cloud');
     }else if(!d||(save.ts||0)>(d.ts||0)){if(!save.ts)save.ts=Date.now();cloudDirty=true;flushCloud()}
     else setCloud('cloud');
@@ -425,6 +468,76 @@ const WARES={
   charm:{name:'Soul Charm',d:'+60% pickup range for the rest of the night',cost:30}
 };
 const belt=()=>{if(!Array.isArray(save.belt))save.belt=[null,null,null];while(save.belt.length<3)save.belt.push(null);return save.belt};
+/* S25 (R27): the Gambler's gear. Each hero wears a weapon, armour and an amulet (save.gear[hero]); spare pieces wait in a bag of 6
+   that all heroes share (save.bag). Tiers: 0 Worn, 1 Fine, 2 Rare, 3 Legendary, 4 Set. A piece being revealed waits in save.pend,
+   so a reload never loses what was paid for. Numbers are a first guess, to tune after play tests. */
+const GSLOTS=['weapon','armour','amulet'],GSLOTN={weapon:'Weapon',armour:'Armour',amulet:'Amulet'};
+const GTIER=[{n:'Worn',w:45,col:'#b9a890'},{n:'Fine',w:30,col:'#f0dcb4'},{n:'Rare',w:17,col:'#ffd04a'},{n:'Legendary',w:5,col:'#ff8a3a'},{n:'Set',w:3,col:'#6dff7d'}];
+const GAMBLE_COST=60,ASH_BACK=15,BAG_MAX=6,LUCK_N=12;
+const GMAIN={weapon:{k:'dmg',v:[5,8,12,15,15]},armour:{k:'life',v:[6,10,15,18,18]},amulet:{k:'haste',v:[3,5,8,10,10]}};
+const GPIECE={weapon:{barbarian:'Axe',necromancer:'Wand',sorceress:'Staff',rogue:'Daggers'},armour:{barbarian:'Hide',necromancer:'Robe',sorceress:'Mantle',rogue:'Leathers'},amulet:{barbarian:'Talisman',necromancer:'Bone Charm',sorceress:'Focus Stone',rogue:'Locket'}};
+/* extra bonuses: f = Fine value, r = Rare range, suf = the end of the piece's name, d = how it reads */
+const GBX={
+  dmg:{f:6,r:[10,14],suf:'of Wrath',d:v=>`+${v}% damage`},
+  haste:{f:4,r:[6,9],suf:'of Haste',d:v=>`Attacks ${v}% faster`},
+  life:{f:8,r:[12,16],suf:'of Vigour',d:v=>`+${v}% max life`},
+  armor:{f:1,r:[1,2],suf:'of Iron',d:v=>`+${v} armor against every hit`},
+  speed:{f:4,r:[6,8],suf:'of Swiftness',d:v=>`+${v}% move speed`},
+  regen:{f:.3,r:[.5,.8],dec:1,suf:'of Mending',d:v=>`Regenerate ${v} life per second`},
+  magnet:{f:15,r:[20,30],suf:'of Gathering',d:v=>`+${v}% pickup range`},
+  area:{f:6,r:[8,12],suf:'of Reach',d:v=>`+${v}% area for all attacks`},
+  crit:{f:3,r:[5,7],suf:'of Ruin',d:v=>`+${v}% critical hit chance`},
+  souls:{f:8,r:[12,16],suf:'of Plenty',d:v=>`+${v}% souls earned`},
+  head:{suf:'of the Adept',d:v=>`Each night starts with ${WEAPONS[v]?WEAPONS[v].name:'a class spell'} at level 2`}
+};
+const GLEG={
+  stormbreaker:{h:'barbarian',s:'weapon',n:'Stormbreaker Axe',d:'Every War Cry also starts a short Whirlwind'},
+  maelstrom:{h:'barbarian',s:'amulet',n:'Eye of the Maelstrom',d:'Whirlwind pulls nearby foes in and lasts 1 second longer'},
+  restless:{h:'necromancer',s:'weapon',n:'Wand of the Restless',d:'Foes slain by a Bone Spear sometimes rise as your skeletons for 8 seconds (up to 3 more)'},
+  pyre:{h:'necromancer',s:'amulet',n:'Pyre Charm',d:'One more Burning Skull, and the skulls set foes alight for 3 seconds'},
+  twinstorm:{h:'sorceress',s:'weapon',n:'Staff of Twin Storms',d:'Each Fireball blast also sends lightning through 2 foes'},
+  winter:{h:'sorceress',s:'amulet',n:'Heart of Winter',d:'When a foe hits you, a Frost Nova goes off by itself (at most every 3 seconds)'},
+  venom:{h:'rogue',s:'weapon',n:'Venomfang Daggers',d:'Critical hits with your daggers leave a small Poison Cloud'},
+  trapper:{h:'rogue',s:'amulet',n:"Trapper's Locket",d:'Blade Traps last 2 seconds longer, and every 5th trap is twice as big'}
+};
+/* one 3-piece set per class, keyed by the hero; working names until the lore is written */
+const GSET={
+  barbarian:{n:"Warlord's Ash",p:{weapon:"Warlord's Cleaver",armour:"Warlord's Ashen Hide",amulet:"Warlord's Brand"},ic:'might',two:'+15% life, and Cleave sweeps 20% wider',three:'Blood Rage: every 50 kills, 6 seconds of +40% damage, and each blow heals 1 life'},
+  necromancer:{n:"Gravecaller's Vestments",p:{weapon:"Gravecaller's Wand",armour:"Gravecaller's Shroud",amulet:"Gravecaller's Phylactery"},ic:'armor',two:'One more skeleton when you raise them',three:'Bone Armour: a shell of bone soaks up 30 damage and grows back 10 seconds after it breaks'},
+  sorceress:{n:"Stormweaver's Regalia",p:{weapon:"Stormweaver's Staff",armour:"Stormweaver's Mantle",amulet:"Stormweaver's Eye"},ic:'fireball',two:'Chain Lightning leaps through 2 more foes',three:'Overload: every 8 seconds your next Fireball is huge, hits three times as hard and chills what it hits'},
+  rogue:{n:"Nightblade's Garb",p:{weapon:"Nightblade's Fangs",armour:"Nightblade's Leathers",amulet:"Nightblade's Locket"},ic:'shadowstep',two:'+10% critical hit chance',three:'Vanish: when hit, you fade for 1 second and your next 3 daggers are sure to be critical hits (at most every 6 seconds)'}
+};
+const gearOf=h=>{if(!save.gear||typeof save.gear!=='object')save.gear={};return save.gear[h]||(save.gear[h]={weapon:null,armour:null,amulet:null})};
+const bag=()=>Array.isArray(save.bag)?save.bag:(save.bag=[]);
+const gClass=it=>!!(it.L||it.set||it.x.some(a=>a[0]==='head'));
+const gFits=(it,h)=>!gClass(it)||it.h===h;
+const gOn=h=>GSLOTS.map(s=>gearOf(h)[s]).filter(it=>it&&gFits(it,h));
+const gSetN=h=>gOn(h).filter(it=>it.set===h).length;
+const gOwned=(h,f)=>[...GSLOTS.map(s=>gearOf(h)[s]),...bag(),save.pend].some(it=>it&&f(it));
+function gName(it){if(it.L)return GLEG[it.L].n;if(it.set)return GSET[it.set].p[it.s];return`${GTIER[it.t].n} ${GPIECE[it.s][it.h]||GSLOTN[it.s]}${it.x.length?' '+GBX[it.x[0][0]].suf:''}`}
+function gLines(it){const m=GMAIN[it.s],out=[[m.k,m.v[it.t]]];for(const a of it.x)out.push(a);return out}
+function gApply(S,k,v){switch(k){case'dmg':S.dmgMul*=1+v/100;break;case'haste':S.cdMul*=1-v/100;break;case'life':S.maxHp*=1+v/100;break;case'armor':S.armor+=v;break;
+  case'speed':S.speed*=1+v/100;break;case'regen':S.regen+=v;break;case'magnet':S.magnet*=1+v/100;break;case'area':S.area*=1+v/100;break;case'crit':S.crit+=v/100;break;case'souls':S.souls+=v;break}}
+function gearStats(S,h){S.souls=0;S.arc=1;S.skel=0;S.chain=0;
+  for(const it of gOn(h))for(const[k,v]of gLines(it))gApply(S,k,v);
+  if(gSetN(h)>=2){if(h==='barbarian'){S.maxHp*=1.15;S.arc=1.2}else if(h==='necromancer')S.skel=1;else if(h==='sorceress')S.chain=2;else if(h==='rogue')S.crit+=.1}}
+/* one sealed piece for hero h in slot s; min = the lowest tier allowed (the Ash Lord's Cache) */
+function gRoll(h,s,min){
+  min=min||0;if(!save.gamb||typeof save.gamb!=='object')save.gamb={n:0};const luck=save.gamb;let t;
+  if(luck.n>=LUCK_N)t=rand()<5/8?3:4;/* the luck counter: 12 in a row without a Legendary or Set piece */
+  else{const ws=GTIER.map((g,i)=>i<min?0:g.w);let r=rand()*ws.reduce((a,b)=>a+b,0);for(t=0;t<4;t++){r-=ws[t];if(r<0)break}}
+  luck.n=t>=3?0:luck.n+1;
+  const it={u:Date.now().toString(36)+'-'+((rand()*1e6)|0),h,s,t,x:[]};
+  if(t===3){const L=Object.keys(GLEG).find(k=>GLEG[k].h===h&&GLEG[k].s===s);if(L&&!gOwned(h,o=>o.L===L))it.L=L;else t=4}/* no armour Legendaries, no doubles: a Set piece instead */
+  if(t===4){if(!GSET[h])t=2;else{const miss=GSLOTS.filter(q=>!gOwned(h,o=>o.set===h&&o.s===q));if(miss.length&&!miss.includes(s))s=pick(miss);it.s=s;it.set=h}}
+  it.t=t;
+  const spells=KITS[h]?[...KITS[h].open,...kitOf(h).u]:[];
+  const val=k=>{const g=GBX[k];if(k==='head')return pick(spells);if(t===1)return g.f;const v=rr(g.r[0],g.r[1]);return g.dec?Math.round(v*10)/10:Math.round(v)};
+  const pool=Object.keys(GBX).filter(k=>k!==GMAIN[s].k&&(k!=='head'||(t===2&&spells.length)));
+  const n=t===0?0:t===2?(rand()<.5?2:3):1;
+  for(let i=0;i<n&&pool.length;i++){const k=pool.splice((rand()*pool.length)|0,1)[0];it.x.push([k,val(k)])}
+  return it;
+}
 const metaCost=(k,l)=>METAS[k].cost?METAS[k].cost(l):Math.round(30*Math.pow(1.7,l));
 const ETYPES={
   ghoul:{r:13,hp:10,spd:36,dmg:7,xp:1},
@@ -928,6 +1041,11 @@ const hh=(x,y,s)=>{let h=(x*374761393+y*668265263+s*982451653)|0;h=Math.imul(h^(
 const ICOL={cleave:'#c9ccd2',bonespear:'#e9e0c8',fireball:'#ff7a2b',daggers:'#dfe4ec',lightning:'#ffe98a',frostnova:'#9fdcff',skeletons:'#6dff7d',brimstone:'#ff5a1c',skulls:'#ffb35a',warcry:'#ffb070',whirlwind:'#c9ccd2',leapslam:'#d8a543',axes:'#c9ccd2',corpseburst:'#6dff7d',curse:'#b277ff',meteor:'#ff5a1c',bladetrap:'#dfe4ec',poison:'#7ddc5a',shadowstep:'#9a7dff',blades:'#dfe4ec',might:'#ff3b2a',haste:'#d8a543',boots:'#d8a543',armor:'#a9adb5',vigor:'#ff4a4a',regen:'#6dff7d',magnet:'#ff6a5a',reach:'#b277ff',heal:'#ff4a4a',souls:'#b277ff',fate:'#d8a543',revive:'#ffd9a8'};
 function skullIcon(g,eye){g.fillStyle='#e6dfca';circ(g,0,-2,9);g.fillRect(-5.5,3,11,6);g.fillStyle='#120d0a';circ(g,-3.4,-2,2.6);circ(g,3.4,-2,2.6);g.fillRect(-.8,2,1.6,3);if(eye){g.save();g.shadowColor=eye;g.shadowBlur=6;g.fillStyle=eye;circ(g,-3.4,-2,1.1);circ(g,3.4,-2,1.1);g.restore()}}
 Object.assign(ICOL,{draught:'#ff5a4a',bomb:'#ffb35a',rune:'#9fdcff',tonic:'#ff7a2b',charm:'#b277ff'});/* S24 (R26) */
+Object.assign(ICOL,{gw_wand:'#6dff7d',gw_staff:'#ff7a2b',g_weapon:'#c9ccd2',g_armour:'#a9adb5',g_amulet:'#d8a543',cache:'#ffd27a'});/* S25 (R27) */
+/* S25 (R27): a piece of gear's icon: the hero's own weapon, a breastplate or an amulet, ringed in its tier's colour */
+function gearIcon(it,size){
+  const base=it.s==='weapon'?({barbarian:'cleave',necromancer:'gw_wand',sorceress:'gw_staff',rogue:'daggers'}[it.h]||'g_weapon'):it.s==='armour'?'g_armour':'g_amulet';
+  const c=icon(base,size),g=c.getContext('2d'),col=GTIER[it.t].col;g.save();g.strokeStyle=col;g.lineWidth=it.t>=3?3:2;g.shadowColor=col;g.shadowBlur=it.t>=2?8:0;g.beginPath();g.arc(0,0,21.2,0,TAU);g.stroke();g.restore();return c}
 function icon(id,size=52){
   const c=document.createElement('canvas'),d=Math.min(2,devicePixelRatio||1);c.width=c.height=Math.round(size*d);c.style.width=c.style.height=size+'px';
   const g=c.getContext('2d');g.scale(d*size/48,d*size/48);g.translate(24,24);g.lineCap='round';g.lineJoin='round';
@@ -976,6 +1094,13 @@ function icon(id,size=52){
     case'rune':g.fillStyle='#5b6470';g.beginPath();g.moveTo(0,-17);g.lineTo(13,-4);g.lineTo(8,15);g.lineTo(-8,15);g.lineTo(-13,-4);g.closePath();g.fill();g.strokeStyle='#bfeaff';g.lineWidth=2.2;ln(g,0,-10,0,10);ln(g,-6,-4,6,4);ln(g,6,-4,-6,4);break;
     case'tonic':g.fillStyle='#6e5a46';g.fillRect(-2.5,-17,5,5);g.fillStyle='rgba(220,220,230,.35)';g.fillRect(-4,-12,8,6);g.beginPath();g.moveTo(-4,-7);g.lineTo(4,-7);g.lineTo(9,14);g.lineTo(-9,14);g.closePath();g.fill();g.fillStyle='#ff5a1c';g.beginPath();g.moveTo(-6,2);g.lineTo(6,2);g.lineTo(8,13);g.lineTo(-8,13);g.closePath();g.fill();g.fillStyle='#ffcf6a';g.beginPath();g.moveTo(0,-2);g.quadraticCurveTo(5,4,0,9);g.quadraticCurveTo(-5,4,0,-2);g.fill();break;
     case'charm':g.strokeStyle='#c99a3e';g.lineWidth=1.6;g.beginPath();g.moveTo(-9,-16);g.lineTo(0,-6);g.lineTo(9,-16);g.stroke();g.fillStyle='#c99a3e';circ(g,0,4,11);g.fillStyle='#120a14';circ(g,0,4,8);g.fillStyle='#a65cff';g.beginPath();g.moveTo(0,-3);g.quadraticCurveTo(7,6,0,12);g.quadraticCurveTo(-7,6,0,-3);g.fill();g.fillStyle='#f0dcff';circ(g,-1,6,1.8);break;
+    /* S25 (R27): gear and the Ash Lord's Cache */
+    case'gw_wand':g.rotate(-.8);g.fillStyle='#e9e0c8';g.fillRect(-16,-2,22,4);g.fillStyle='#b9ad92';g.fillRect(-16,-2.6,4,5.2);g.translate(10,0);g.scale(.62,.62);g.rotate(.8);skullIcon(g,'#6dff7d');break;
+    case'gw_staff':{g.rotate(-.8);g.fillStyle='#6a4a30';g.fillRect(-17,-1.8,26,3.6);g.fillStyle='#c99a3e';g.fillRect(6,-3,3,6);const k=g.createRadialGradient(13,0,0,13,0,7);k.addColorStop(0,'#fff3c4');k.addColorStop(.5,'#ff8a2a');k.addColorStop(1,'#7a2a10');g.fillStyle=k;circ(g,13,0,6.5);break}
+    case'g_weapon':g.fillStyle='#d4d7de';g.beginPath();g.moveTo(0,-17);g.lineTo(3.5,-13);g.lineTo(3.5,5);g.lineTo(-3.5,5);g.lineTo(-3.5,-13);g.closePath();g.fill();g.fillStyle='#c99a3e';g.fillRect(-9,5,18,3);g.fillStyle='#4a3020';g.fillRect(-2,8,4,7);g.fillStyle='#c99a3e';circ(g,0,16,2.4);break;
+    case'g_armour':g.fillStyle='#8f949c';g.beginPath();g.moveTo(-14,-12);g.lineTo(-6,-15);g.quadraticCurveTo(0,-10,6,-15);g.lineTo(14,-12);g.lineTo(11,3);g.quadraticCurveTo(0,18,-11,3);g.closePath();g.fill();g.strokeStyle='#5d6168';g.lineWidth=1.6;ln(g,0,-9,0,12);ln(g,-9,-2,9,-2);g.fillStyle='#d8a543';circ(g,-8,-9,1.5);circ(g,8,-9,1.5);break;
+    case'g_amulet':g.strokeStyle='#c99a3e';g.lineWidth=1.6;g.beginPath();g.moveTo(-10,-16);g.lineTo(0,-5);g.lineTo(10,-16);g.stroke();g.fillStyle='#c99a3e';g.beginPath();g.moveTo(0,-6);g.lineTo(10,4);g.lineTo(0,16);g.lineTo(-10,4);g.closePath();g.fill();g.fillStyle='#7a0d10';g.beginPath();g.moveTo(0,-1);g.lineTo(6,4);g.lineTo(0,11);g.lineTo(-6,4);g.closePath();g.fill();g.fillStyle='rgba(255,200,180,.7)';circ(g,-1.5,2.5,1.4);break;
+    case'cache':g.fillStyle='#4a3428';g.fillRect(-15,-3,30,16);g.fillStyle='#5e4132';g.beginPath();g.moveTo(-15,-3);g.quadraticCurveTo(0,-17,15,-3);g.closePath();g.fill();g.fillStyle='#6a6a70';g.fillRect(-10,-12,3,25);g.fillRect(7,-12,3,25);g.fillRect(-15,-4,30,2.4);g.fillStyle='#ffd27a';g.fillRect(-3,-1,6,7);g.fillStyle='#2a1a12';g.fillRect(-1,1.5,2,3);break;
     case'revive':g.strokeStyle='#ffd9a8';g.lineWidth=3.2;g.beginPath();g.ellipse(0,-8,5,6,0,0,TAU);g.stroke();ln(g,0,-2,0,16);ln(g,-9,3,9,3);break;
   }
   g.restore();return c;
@@ -1194,24 +1319,33 @@ function gore(e,big,ang){
 function recalc(){
   const h=HEROES[run.hero],old=S?S.maxHp:0;
   S={maxHp:h.hp*(1+.08*meta('vitality')+.12*townLv('wall')),speed:h.speed,armor:h.armor,dmgMul:1+.06*meta('might'),cdMul:(h.cd||1)*Math.pow(.96,meta('haste')),area:1,magnet:70*(1+.15*meta('magnet')),regen:0,crit:h.crit||0};
+  gearStats(S,run.hero);/* S25 (R27): the hero's gear */
   for(const k in run.passives)for(let i=0;i<run.passives[k];i++)PASSIVES[k].a(S);
   if(run.charm)S.magnet*=1.6;/* S24 (R26): Soul Charm */
   if(old&&S.maxHp>old)P.hp+=S.maxHp-old;
   P.hp=Math.min(P.hp,S.maxHp);
 }
 function addWeapon(id){run.weapons.push({id,lvl:1,t:.3});if(id==='skeletons')syncMinions()}
-function syncMinions(){const w=getW('skeletons');const n=w?T.skeletons.n[w.lvl]:0;while(minions.length<n){const m={x:P.x+rr(-30,30),y:P.y+rr(-30,30),atk:0,face:1,tgt:null,swing:0,walk:rand()*5};minions.push(m);burst(m.x,m.y,14,'109,255,125',70,.5,2,true,-1)}}
+function syncMinions(){const w=getW('skeletons');const n=w?T.skeletons.n[w.lvl]+(S&&S.skel||0):0;while(minions.filter(m=>!m.temp).length<n){const m={x:P.x+rr(-30,30),y:P.y+rr(-30,30),atk:0,face:1,tgt:null,swing:0,walk:rand()*5};minions.push(m);burst(m.x,m.y,14,'109,255,125',70,.5,2,true,-1)}}
+/* S25 (R27): Wand of the Restless raises a slain foe for 8 seconds, up to 3 at once */
+function raiseTemp(x,y){if(minions.filter(m=>m.temp).length>=3)return;minions.push({x,y,atk:0,face:1,tgt:null,swing:0,walk:rand()*5,temp:8});burst(x,y,14,'109,255,125',70,.5,2,true,-1)}
 
 function newRun(hero,mode){
   mode=MODES[mode]?mode:'short';
   enemies=[];gems=[];projs=[];eprojs=[];effects=[];nP=0;texts=[];decals=[];minions=[];zones=[];S=null;hitStop=0;flashA=0;
   run={hero,time:0,kills:0,xp:0,level:1,pending:0,souls:0,spawnT:.5,mode,round:-1,ev:0,evs:[],ei:0,elites:[],swarm:-1,boss:null,bossSpawned:false,shake:0,rerolls:meta('fate')+townLv('chapel'),revives:meta('revive'),weapons:[],passives:{},over:false,won:false,endT:0,hurt:0,hint:save.runs<3?6:0,bellT:18,
-    cine:0,roarT:0,growlT:2,hbT:0,hbP:0,stepT:0,cryT:0,leap:null,dash:null,cb:[],furyT:0,charm:0};
+    cine:0,roarT:0,growlT:2,hbT:0,hbP:0,stepT:0,cryT:0,leap:null,dash:null,cb:[],furyT:0,charm:0,
+    leg:{},set3:null,bone:0,boneT:0,ovT:0,vanT:0,rageN:0,rageT:0,sure:0,spin2:0,spin2h:0,wint:0,cacheD:0};
   P={x:0,y:0,r:12,hp:1,fx:1,fy:0,face:1,walk:0,inv:0,safe:0,moving:false,atkT:0,atkA:0};
   run.evs=runEvents();run.elites=runElites();
+  /* S25 (R27): Legendary effects and the 3-piece set skill for this night */
+  for(const it of gOn(hero))if(it.L)run.leg[it.L]=1;
+  if(gSetN(hero)>=3){run.set3=hero;if(hero==='necromancer')run.bone=30}
   for(const w of HEROES[hero].start)addWeapon(w);
+  for(const it of gOn(hero))for(const[k,v]of it.x)if(k==='head'&&kitHas(hero,v)){const w=getW(v);if(w)w.lvl=Math.max(w.lvl,2);else{addWeapon(v);getW(v).lvl=2}}
   recalc();P.hp=S.maxHp;syncMinions();
   hud.last={};$('bossbar').style.display='none';syncBelt();
+  const si=$('setI');si.hidden=!run.set3;si.innerHTML='';if(run.set3){si.appendChild(icon(GSET[run.set3].ic,34));si.insertAdjacentHTML('beforeend','<span></span>');si.setAttribute('aria-label',GSET[run.set3].three.split(':')[0])}
   effects.push({k:'rise',x:0,y:0,life:1.2,max:1.2});burst(0,0,30,'255,130,50',120,.8,2.2,true,-1);
   updateHud();setState('play');
 }
@@ -1219,11 +1353,12 @@ function hudOn(s){return['play','levelup','chest','pause'].includes(s)||(s==='se
 function setState(s){
   if(s==='settings'&&state!=='settings')setFrom=state;
   state=s;
-  $('menu').classList.toggle('on',s==='menu'||(s==='settings'&&setFrom==='menu'));$('altar').classList.toggle('on',s==='altar');$('shop').classList.toggle('on',s==='shop');
+  $('menu').classList.toggle('on',s==='menu'||(s==='settings'&&setFrom==='menu'));$('altar').classList.toggle('on',s==='altar');$('shop').classList.toggle('on',s==='shop');$('gamb').classList.toggle('on',s==='gamb');
+  if(s!=='gamb')$('gearM').classList.remove('on');
   $('hud').classList.toggle('on',hudOn(s));
   for(const[id,st]of[['lvlM','levelup'],['chestM','chest'],['pauseM','pause'],['endM','end'],['setM','settings']])$(id).classList.toggle('on',s===st);
   if(s!=='play'){input.on=false;input.id=null}
-  if(s==='menu'||s==='altar'||s==='shop')musSet('menu',0,false);else if(s==='pause'||s==='levelup'||s==='chest')MUS.mode='pause';else if(s==='end')MUS.mode='end';else if(s==='play')MUS.mode='run';
+  if(s==='menu'||s==='altar'||s==='shop'||s==='gamb')musSet('menu',0,false);else if(s==='pause'||s==='levelup'||s==='chest')MUS.mode='pause';else if(s==='end')MUS.mode='end';else if(s==='play')MUS.mode='run';
 }
 function banner(t,sub,boss){const b=$('banner');b.querySelector('b').textContent=t;b.querySelector('small').textContent=sub||'';b.classList.remove('go');b.classList.toggle('boss',!!boss);void b.offsetWidth;b.classList.add('go')}
 
@@ -1295,8 +1430,11 @@ function separate(){
 
 /* ---------- combat ---------- */
 function dmgText(x,y,v,crit,col){if(texts.length>60)return;texts.push({x:x+rr(-6,6),y,v:Math.round(v),life:crit?.9:.7,max:crit?.9:.7,crit,col})}
+let forceCrit=false;/* S25 (R27): Vanish makes the next daggers sure to be critical hits */
 function hurt(e,dmg,kx,ky,quiet){
-  if(e.dead)return false;let crit=false;if(S.crit&&rand()<S.crit){dmg*=2;crit=true}
+  const fc=forceCrit;forceCrit=false;
+  if(e.dead)return false;let crit=false;if(fc||(S.crit&&rand()<S.crit)){dmg*=2;crit=true}
+  if(run.rageT>run.time){dmg*=1.4;if(!quiet&&P.hp<S.maxHp)P.hp=Math.min(S.maxHp,P.hp+1)}/* S25 (R27): Blood Rage */
   if(run.cryT>run.time)dmg*=1.2;if(e.curseT>run.time)dmg*=1+e.curseA;/* S23: War Cry and Withering Curse */
   if(run.furyT>run.time)dmg*=1.3;/* S24 (R26): Fury Tonic */
   e.hp-=dmg;e.flash=.09;e.hitT=.16;e.kx+=kx/e.mass;e.ky+=ky/e.mass;
@@ -1322,10 +1460,15 @@ function kill(e,quiet){
   if(e.xp)dropGem(e.x,e.y,e.xp);
   if(!e.elite&&!e.boss){if(rand()<1/45)drop('soul',e.x,e.y);if(rand()<.006)drop('heal',e.x,e.y)}
   /* S23: Corpse Burst, a short delay so chains ripple outward; at most 8 waiting */
+  /* S25 (R27): Blood Rage builds with every kill and breaks loose at 50 */
+  if(run.set3==='barbarian'&&!e.boss&&!run.won&&run.rageT<=run.time&&++run.rageN>=50){run.rageN=0;run.rageT=run.time+6;sfx.shout();run.shake=Math.max(run.shake,4);
+    texts.push({x:P.x,y:P.y-26,v:'Blood Rage!',life:1.2,max:1.2,col:'#ff5a4a'});burst(P.x,P.y,26,'255,40,20',120,.7,2.4,true,-1)}
   const cbw=!quiet&&!e.boss&&getW('corpseburst');if(cbw&&run.cb.length<8&&rand()<T.corpseburst.ch[cbw.lvl])run.cb.push({x:e.x,y:e.y,t:.14,L:cbw.lvl});
   if(e.elite){if(!run.won)drop('chest',e.x,e.y);for(let i=0;i<5;i++)drop('soul',e.x,e.y);drop('heal',e.x,e.y);run.shake=Math.max(run.shake,7);sfx.boom();sfx.die('brute');stop(.09);effects.push({k:'boom',x:e.x,y:e.y,R:70,life:.4,max:.4});addDecal('scorch',e.x,e.y+10,90,40)}
   if(e.boss){
     run.won=true;run.endT=3.4;run.boss=null;$('bossbar').style.display='none';
+    /* S25 (R27): the Ash Lord's Cache, one sealed piece the Gambler opens in town (Full Night: Rare or better) */
+    if(!run.cacheD){run.cacheD=1;if(!Array.isArray(save.cache))save.cache=[];save.cache.push({min:run.mode==='full'?2:1,h:run.hero})}
     for(let i=0;i<40;i++)drop('soul',e.x+rr(-40,40),e.y+rr(-40,40));
     for(let i=0;i<6;i++)effects.push({k:'boom',x:e.x+rr(-50,50),y:e.y+rr(-50,50),R:rr(60,120),life:.5+i*.1,max:.5+i*.1});
     run.shake=18;stop(.3);flashA=.8;flashC='255,220,170';sfx.boom();sfx.roar();sfx.win();banner('Victory','The Ash Lord is slain');musSet('run',.3,false);
@@ -1335,10 +1478,18 @@ function kill(e,quiet){
 }
 function damagePlayer(d){
   if(run.over||run.won||P.inv>0||P.safe>0)return;
-  const dd=Math.max(1,d-S.armor);P.hp-=dd;run.hurt=.35;run.shake=Math.max(run.shake,3);sfx.hurt();if(dd>=12)stop(.05);
+  let dd=Math.max(1,d-S.armor);
+  /* S25 (R27): Bone Armour soaks the blow first; it grows back 10 seconds after it breaks */
+  if(run.bone>0){const a=Math.min(run.bone,dd);run.bone-=a;dd-=a;burst(P.x,P.y-6,6,'230,220,200',90,.4,2,false);
+    if(run.bone<=0){run.bone=0;run.boneT=run.time+10;sfx.bonecast();burst(P.x,P.y-6,18,'230,220,200',140,.6,2.4,false)}
+    if(dd<=0)return}
+  P.hp-=dd;run.hurt=.35;run.shake=Math.max(run.shake,3);sfx.hurt();if(dd>=12)stop(.05);
   texts.push({x:P.x,y:P.y-22,v:Math.round(dd),life:.7,max:.7,col:'#ff5a4a'});
   if(SET.gore){const n=dd>=10?10:5;for(let i=0;i<n;i++)drop1(P.x,P.y-4,10,rand()*TAU,rr(40,130),GORE.hero,rr(.4,.8),rr(1.2,2.4));addDecal('bloodD',P.x+rr(-6,6),P.y+10+rr(-3,3),rr(7,11),25)}
   else burst(P.x,P.y-6,6,'#8a0f08',80,.4,2,false);
+  /* S25 (R27): Heart of Winter and Vanish answer a blow */
+  if(P.hp>0&&run.leg.winter&&run.time>=run.wint){run.wint=run.time+3;const w=getW('frostnova');novaCast(w?w.lvl:1)}
+  if(P.hp>0&&run.set3==='rogue'&&run.time>=run.vanT){run.vanT=run.time+6;P.inv=Math.max(P.inv,1);run.sure=3;burst(P.x,P.y-6,20,'154,125,255',90,.6,2.2,true,-1);sfx.throw()}
   if(P.hp<=0){
     if(run.revives>0){run.revives--;P.hp=S.maxHp*.5;P.inv=2.2;banner('Undying','Death rejects you');sfx.roar();run.shake=14;flashA=.7;flashC='255,230,170';
       forNear(P.x,P.y,320,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,e.boss?400:250,Math.cos(a)*600,Math.sin(a)*600,true)});
@@ -1349,25 +1500,42 @@ function damagePlayer(d){
 
 /* ---------- weapons (unchanged numbers) ---------- */
 function slash(a,L,arc0,kb){
-  const R=T.cleave.R[L]*S.area,arc=arc0||T.cleave.arc[L],dmg=T.cleave.dmg[L]*S.dmgMul;curW='cleave';
+  const R=T.cleave.R[L]*S.area,arc=arc0||T.cleave.arc[L]*(S.arc||1),dmg=T.cleave.dmg[L]*S.dmgMul;curW='cleave';
   forNear(P.x,P.y,R,e=>{let da=Math.atan2(e.y-P.y,e.x-P.x)-a;da=Math.atan2(Math.sin(da),Math.cos(da));if(arc0>=TAU){const b=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,dmg,Math.cos(b)*kb,Math.sin(b)*kb)}else if(Math.abs(da)<=arc/2+e.r/R)hurt(e,dmg,Math.cos(a)*170,Math.sin(a)*170)});
   effects.push({k:'slash',a,R,arc,life:.22,max:.22});sfx.swing();P.atkT=.22;P.atkA=a;
 }
 function fireAt(x,y,maxR){const t=nearest(x,y,maxR);return t?Math.atan2(t.y-y,t.x-x):Math.atan2(P.fy,P.fx)}
+/* S25 (R27): Whirlwind's hits, shared by the spell and the Stormbreaker Axe; Eye of the Maelstrom pulls foes in instead of pushing them away */
+function spinHit(L){const t=T.whirlwind,R=t.R[L]*S.area,pull=run.leg.maelstrom;curW='cleave';
+  if(pull)forNear(P.x,P.y,R*2.2,e=>{if(e.boss)return;const a=Math.atan2(P.y-e.y,P.x-e.x);e.kx+=Math.cos(a)*140/e.mass;e.ky+=Math.sin(a)*140/e.mass});
+  forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x),k=pull?0:90;hurt(e,t.dmg[L]*S.dmgMul,Math.cos(a)*k,Math.sin(a)*k,true)});sfx.swing()}
+function startSpin(d){const ww=getW('whirlwind');if(ww){if(!(ww.spin>0)){ww.spin=d+(run.leg.maelstrom?1:0);ww.hit=0}}else if(!(run.spin2>0)){run.spin2=d+(run.leg.maelstrom?1:0);run.spin2h=0}}
+function novaCast(L){const t=T.frostnova,R=t.R[L]*S.area;curW='frostnova';forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);e.slow=Math.max(e.slow,t.slow[L]);hurt(e,t.dmg[L]*S.dmgMul,Math.cos(a)*120,Math.sin(a)*120)});
+  effects.push({k:'nova',x:P.x,y:P.y,R,life:.4,max:.4,col:'150,215,255'});burst(P.x,P.y,22,'170,225,255',R*2.2,.45,2.2,true);sfx.nova()}
+/* S25 (R27): Staff of Twin Storms: a small bolt through 2 foes from each Fireball blast */
+function miniChain(x,y,dmg){const used=[],pts=[[x,y]];let tg=nearest(x,y,170,used);curW='lightning';
+  for(let i=0;i<2&&tg;i++){used.push(tg.id);pts.push([tg.x,tg.y]);hurt(tg,dmg,0,0,true);tg=nearest(tg.x,tg.y,150,used)}
+  if(pts.length<2)return;const jag=[];for(let i=0;i<pts.length-1;i++){const[a1,b1]=pts[i],[a2,b2]=pts[i+1];for(let s=0;s<4;s++){const f=s/4;jag.push([a1+(a2-a1)*f+(s?rr(-7,7):0),b1+(b2-b1)*f+(s?rr(-7,7):0)])}}jag.push(pts[pts.length-1]);
+  effects.push({k:'bolt',pts:jag,life:.18,max:.18});if(!thr('twinZap',140))sfx.zap()}
+/* S25 (R27): Pyre Charm sets foes alight; Venomfang Daggers leave poison */
+function ignite(e,d){e.ign=run.time+3;e.ignD=Math.max(e.ignD&&e.ign>run.time?e.ignD:0,d);if(!(e.ignT>0))e.ignT=.5}
+function venomCloud(x,y){if(zones.filter(z=>z.k==='poison').length>=14)return;const w=getW('poison'),L=w?w.lvl:1;
+  zones.push({k:'poison',x,y,R:40*S.area,dmg:T.poison.dmg[L]*S.dmgMul,life:2.5,max:2.5,tick:.5,t:0,ph:rand()*6});burst(x,y,8,'120,230,90',60,.4,2,true)}
 function updateWeapons(dt){
+  if(run.spin2>0){run.spin2-=dt;run.spin2h-=dt;if(run.spin2h<=0){run.spin2h=.2;spinHit(1)}}/* S25: the axe's short spin without the spell */
   for(const w of run.weapons){
     const L=w.lvl,t=T[w.id];
-    if(w.id==='skulls'||w.id==='blades'){const sk=w.id==='skulls';
-      const n=t.n[L],R=(sk?74:54)*S.area,dmg=t.dmg[L]*S.dmgMul;w.pos=[];curW=sk?'skulls':'dag';
+    if(w.id==='skulls'||w.id==='blades'){const sk=w.id==='skulls',pyre=sk&&run.leg.pyre;
+      const n=t.n[L]+(pyre?1:0),R=(sk?74:54)*S.area,dmg=t.dmg[L]*S.dmgMul;w.pos=[];curW=sk?'skulls':'dag';
       for(let i=0;i<n;i++){const a=run.time*t.spd[L]+i*TAU/n,x=P.x+Math.cos(a)*R,y=P.y+Math.sin(a)*R*.85;w.pos.push([x,y,a]);
-        forNear(x,y,sk?11:9,e=>{const key=sk?'skT':'blT';if(e[key]>run.time)return;e[key]=run.time+(sk?.5:.35);const k=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,dmg,Math.cos(k)*(sk?120:60),Math.sin(k)*(sk?120:60))});
+        forNear(x,y,sk?11:9,e=>{const key=sk?'skT':'blT';if(e[key]>run.time)return;e[key]=run.time+(sk?.5:.35);const k=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,dmg,Math.cos(k)*(sk?120:60),Math.sin(k)*(sk?120:60));if(pyre&&!e.dead)ignite(e,dmg*.35)});
         if(sk&&rand()<.25)addP(x,y,rr(-10,10),rr(-30,-10),.35,2.2,'255,130,40',true,0)}
       continue;
     }
     /* S23: Whirlwind spins for a while, hitting everything around every 0.2 s */
     if(w.id==='whirlwind'){
-      if(w.spin>0){w.spin-=dt;w.hit=(w.hit||0)-dt;if(w.hit<=0){w.hit=.2;const R=t.R[L]*S.area;curW='cleave';forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,t.dmg[L]*S.dmgMul,Math.cos(a)*90,Math.sin(a)*90,true)});sfx.swing()}}
-      else{w.t-=dt;if(w.t<=0){w.t=t.cd[L]*S.cdMul;w.spin=t.dur[L];w.hit=0}}
+      if(w.spin>0){w.spin-=dt;w.hit=(w.hit||0)-dt;if(w.hit<=0){w.hit=.2;spinHit(L)}}
+      else{w.t-=dt;if(w.t<=0){w.t=t.cd[L]*S.cdMul;w.spin=t.dur[L]+(run.leg.maelstrom?1:0);w.hit=0}}
       continue;
     }
     /* S23: Withering Curse, an aura checked 4 times a second */
@@ -1381,13 +1549,17 @@ function updateWeapons(dt){
         slash(a,L);if(L>=3)slash(a+Math.PI,L);break}
       case'bonespear':{w.t=t.cd[L]*S.cdMul;const n=t.n[L],a=fireAt(P.x,P.y,420);for(let i=0;i<n;i++){const b=a+(i-(n-1)/2)*.16;projs.push({k:'bone',x:P.x,y:P.y-6,vx:Math.cos(b)*430,vy:Math.sin(b)*430,dmg:t.dmg[L]*S.dmgMul,pierce:t.pierce[L],r:8,life:1.4,hits:[],split:L>=6})}sfx.bonecast();break}
       case'fireball':{w.t=t.cd[L]*S.cdMul;const near=enemies.filter(e=>!e.dead&&Math.abs(e.x-P.x)<VW/2&&Math.abs(e.y-P.y)<VH/2);
-        for(let i=0;i<t.n[L];i++){const tg=near.length?pick(near):null,a=tg?Math.atan2(tg.y-P.y,tg.x-P.x):rand()*TAU;projs.push({k:'fire',x:P.x,y:P.y-6,vx:Math.cos(a)*300,vy:Math.sin(a)*300,dmg:t.dmg[L]*S.dmgMul,ex:t.ex[L]*S.area,pierce:1,r:9,life:1.5,hits:[],burn:L>=6})}
+        for(let i=0;i<t.n[L];i++){const tg=near.length?pick(near):null,a=tg?Math.atan2(tg.y-P.y,tg.x-P.x):rand()*TAU,p={k:'fire',x:P.x,y:P.y-6,vx:Math.cos(a)*300,vy:Math.sin(a)*300,dmg:t.dmg[L]*S.dmgMul,ex:t.ex[L]*S.area,pierce:1,r:9,life:1.5,hits:[],burn:L>=6};
+          /* S25 (R27): Overload: every 8 seconds one huge Fireball, three times the damage, twice the blast, and it chills */
+          if(!i&&run.set3==='sorceress'&&run.time>=run.ovT){run.ovT=run.time+8;p.over=1;p.dmg*=3;p.ex*=2;p.r=14}
+          projs.push(p)}
         sfx.firecast();break}
-      case'daggers':{w.t=t.cd[L]*S.cdMul;const n=t.n[L],a=fireAt(P.x,P.y,380);for(let i=0;i<n;i++){const b=a+(i-(n-1)/2)*.13;projs.push({k:'dag',x:P.x,y:P.y-4,vx:Math.cos(b)*560,vy:Math.sin(b)*560,dmg:t.dmg[L]*S.dmgMul,pierce:t.pierce[L],r:6,life:.7,hits:[],echo:L>=6})}sfx.throw();break}
+      case'daggers':{w.t=t.cd[L]*S.cdMul;const n=t.n[L],a=fireAt(P.x,P.y,380);for(let i=0;i<n;i++){const b=a+(i-(n-1)/2)*.13;projs.push({k:'dag',x:P.x,y:P.y-4,vx:Math.cos(b)*560,vy:Math.sin(b)*560,dmg:t.dmg[L]*S.dmgMul,pierce:t.pierce[L],r:6,life:.7,hits:[],echo:L>=6,sure:run.sure>0?(run.sure--,1):0})}sfx.throw();break}
       /* ---- S23 (R24): class spells ---- */
       case'warcry':{w.t=t.cd[L]*S.cdMul;const R=t.R[L]*S.area;curW='cleave';
         forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);e.daze=Math.max(e.daze||0,t.daze[L]);hurt(e,t.dmg[L]*S.dmgMul,Math.cos(a)*420,Math.sin(a)*420,true)});
-        if(L>=5)run.cryT=run.time+4;effects.push({k:'nova',x:P.x,y:P.y,R,life:.45,max:.45,col:'255,170,90'});run.shake=Math.max(run.shake,3);sfx.shout();break}
+        if(L>=5)run.cryT=run.time+4;effects.push({k:'nova',x:P.x,y:P.y,R,life:.45,max:.45,col:'255,170,90'});run.shake=Math.max(run.shake,3);sfx.shout();
+        if(run.leg.stormbreaker)startSpin(1.2);/* S25 (R27): Stormbreaker Axe */break}
       case'leapslam':{let best=null,bn=0;for(const e of enemies){if(e.dead||e.boss)continue;const dx=e.x-P.x,dy=e.y-P.y;if(dx*dx+dy*dy>300*300)continue;let n=0;forNear(e.x,e.y,70,()=>n++);if(n>bn){bn=n;best=e}}
         if(!best||bn<3){w.t=.5;break}w.t=t.cd[L]*S.cdMul;run.leap={x0:P.x,y0:P.y,x1:best.x,y1:best.y,t:0,T:.42,L};P.safe=.6;sfx.swing();break}
       case'axes':{w.t=t.cd[L]*S.cdMul;const n=t.n[L],a=fireAt(P.x,P.y,360);for(let i=0;i<n;i++){const b=a+(i-(n-1)/2)*.55;projs.push({k:'axe',x:P.x,y:P.y-6,a:b,age:0,vx:0,vy:0,dmg:t.dmg[L]*S.dmgMul,pierce:99,r:11,life:2.6,hits:[]})}sfx.throw();sfx.swing();break}
@@ -1395,7 +1567,8 @@ function updateWeapons(dt){
       case'meteor':{w.t=t.cd[L]*S.cdMul;const near=enemies.filter(e=>!e.dead&&Math.abs(e.x-P.x)<VW/2-20&&Math.abs(e.y-P.y)<VH/2-20);if(!near.length){w.t=.5;break}
         for(let i=0;i<t.n[L];i++){const tg=pick(near);zones.push({k:'mark',x:tg.x+rr(-12,12),y:tg.y+rr(-12,12),R:t.R[L]*S.area,dmg:t.dmg[L]*S.dmgMul,life:1+i*.25,max:1+i*.25})}sfx.firecast();break}
       case'bladetrap':{w.t=t.cd[L]*S.cdMul;if(zones.filter(z=>z.k==='trap').length>=10){const i=zones.findIndex(z=>z.k==='trap');zones.splice(i,1)}
-        zones.push({k:'trap',x:P.x-P.fx*14,y:P.y+8-P.fy*14,R:16*S.area,dmg:t.dmg[L]*S.dmgMul,life:t.life[L],max:t.life[L]});sfx.throw();break}
+        const tl=run.leg.trapper,big=tl&&(w.n=(w.n||0)+1)%5===0,life=t.life[L]+(tl?2:0);/* S25 (R27): Trapper's Locket */
+        zones.push({k:'trap',x:P.x-P.fx*14,y:P.y+8-P.fy*14,R:16*S.area*(big?2:1),dmg:t.dmg[L]*S.dmgMul,life,max:life});sfx.throw();break}
       case'poison':{w.t=t.cd[L]*S.cdMul;const tg=nearest(P.x,P.y,280),x=tg?tg.x:P.x+P.fx*80,y=tg?tg.y:P.y+P.fy*80;
         zones.push({k:'poison',x,y,R:t.R[L]*S.area,dmg:t.dmg[L]*S.dmgMul,life:t.life[L],max:t.life[L],tick:.5,t:0,ph:rand()*6});burst(x,y,14,'120,230,90',90,.5,2.5,true);sfx.hiss();break}
       case'shadowstep':{const D=t.D[L],tg=nearest(P.x,P.y,D*1.1);if(!tg){w.t=.4;break}w.t=t.cd[L]*S.cdMul;
@@ -1404,19 +1577,20 @@ function updateWeapons(dt){
         run.dash={x0:P.x,y0:P.y,x1,y1,t:0,T:.15};P.safe=.4;P.fx=ux;P.fy=uy;if(Math.abs(ux)>.1)P.face=ux>0?1:-1;effects.push({k:'dash',x0:P.x,y0:P.y,x1,y1,life:.4,max:.4,face:P.face});sfx.throw();sfx.swing();break}
       case'lightning':{w.t=t.cd[L]*S.cdMul;const used=[];let any=false;curW='lightning';
         for(let b=0;b<t.bolts[L];b++){let tg=nearest(P.x,P.y,320,used);if(!tg)break;any=true;const pts=[[P.x,P.y-14]];
-          for(let i=0;i<t.chain[L]&&tg;i++){used.push(tg.id);pts.push([tg.x,tg.y]);hurt(tg,t.dmg[L]*S.dmgMul,0,0);tg=nearest(tg.x,tg.y,150,used)}
+          for(let i=0;i<t.chain[L]+(S.chain||0)&&tg;i++){used.push(tg.id);pts.push([tg.x,tg.y]);hurt(tg,t.dmg[L]*S.dmgMul,0,0);tg=nearest(tg.x,tg.y,150,used)}
           const jag=[];for(let i=0;i<pts.length-1;i++){const[a1,b1]=pts[i],[a2,b2]=pts[i+1];for(let s=0;s<5;s++){const f=s/5;jag.push([a1+(a2-a1)*f+(s?rr(-9,9):0),b1+(b2-b1)*f+(s?rr(-9,9):0)])}}jag.push(pts[pts.length-1]);
           effects.push({k:'bolt',pts:jag,life:.22,max:.22});for(const p of pts.slice(1))burst(p[0],p[1],5,'200,230,255',90,.25,2,true)}
         if(any){sfx.zap();flashA=Math.max(flashA,.08);flashC='180,210,255'}else w.t=.3;break}
-      case'frostnova':{w.t=t.cd[L]*S.cdMul;const R=t.R[L]*S.area;curW='frostnova';forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);e.slow=Math.max(e.slow,t.slow[L]);hurt(e,t.dmg[L]*S.dmgMul,Math.cos(a)*120,Math.sin(a)*120)});
-        effects.push({k:'nova',x:P.x,y:P.y,R,life:.4,max:.4,col:'150,215,255'});burst(P.x,P.y,22,'170,225,255',R*2.2,.45,2.2,true);sfx.nova();break}
+      case'frostnova':w.t=t.cd[L]*S.cdMul;novaCast(L);break;
       case'brimstone':{w.t=t.tick[L];curW='brimstone';forNear(P.x,P.y,t.R[L]*S.area,e=>hurt(e,t.dmg[L]*S.dmgMul,0,0,true));break}
       case'skeletons':w.t=99;break;
     }
   }
 }
 function updateMinions(dt){
-  const w=getW('skeletons');if(!w)return;const L=w.lvl,t=T.skeletons;
+  const w=getW('skeletons');if(!w&&!minions.length)return;const L=w?w.lvl:1,t=T.skeletons;
+  /* S25 (R27): the Wand of the Restless's risen foes crumble after 8 seconds */
+  for(let i=minions.length-1;i>=0;i--){const m=minions[i];if(m.temp&&(m.temp-=dt)<=0){burst(m.x,m.y,12,'230,220,200',70,.5,2,false);minions.splice(i,1)}}
   minions.forEach((m,i)=>{
     m.atk-=dt;m.swing-=dt;m.walk+=dt;
     if(!m.tgt||m.tgt.dead||Math.hypot(m.tgt.x-P.x,m.tgt.y-P.y)>270)m.tgt=nearest(m.x,m.y,230);
@@ -1451,6 +1625,7 @@ function update(dt){
     if(P.moving){P.x+=jx*S.speed*dt;P.y+=jy*S.speed*dt;const d=Math.hypot(jx,jy);P.fx=jx/d;P.fy=jy/d;if(Math.abs(jx)>.1)P.face=jx>0?1:-1;P.walk+=dt;
       run.stepT-=dt;if(run.stepT<=0){run.stepT=.34;if(rand()<.6)addP(P.x+rr(-5,5),P.y+10,rr(-15,15),rr(-8,0),.5,rr(1.5,2.5),'rgba(90,80,70,.6)',false,0)}}
     P.hp=Math.min(S.maxHp,P.hp+S.regen*dt);P.inv=Math.max(0,P.inv-dt);
+    if(run.set3==='necromancer'&&run.bone<=0&&run.time>=run.boneT){run.bone=30;burst(P.x,P.y-6,14,'230,220,200',70,.5,2,false)}/* S25: Bone Armour grows back */
     if(SET.gore&&P.hp<S.maxHp*.35){run.bleed=(run.bleed||0)-dt;if(run.bleed<=0){run.bleed=P.moving?rr(.25,.45):rr(.8,1.4);addDecal('bloodD',P.x+rr(-4,4),P.y+9+rr(-2,2),rr(5,9),22)}}
     const fr=P.hp/S.maxHp;if(fr<.3&&!run.won){run.hbT-=dt;if(run.hbT<=0){run.hbT=.5+fr/.3*.55;sfx.heart(1-fr);run.hbP=1}}
     run.hbP=Math.max(0,run.hbP-dt*2.5);
@@ -1462,6 +1637,7 @@ function update(dt){
   const far=spawnR()*1.55;
   for(const e of enemies){
     if(e.dead)continue;
+    if(e.ign>run.time){e.ignT-=dt;if(e.ignT<=0){e.ignT=.5;curW='brimstone';hurt(e,e.ignD,0,0,true);if(e.dead)continue}if(rand()<.3)addP(e.x+rr(-e.r,e.r)*.6,e.y-e.r*.4,0,-30,.4,2,'255,120,30',true,-1)}/* S25: Pyre Charm */
     e.flash-=dt;e.atk-=dt;e.lunge-=dt;e.hitT-=dt;if(e.slow>0)e.slow-=dt;if(e.born>0)e.born-=dt;
     /* badly wounded foes leave a trail of drips */
     if(SET.gore&&e.hp<e.maxHp*.6){const gd=GORE[e.type];if(gd&&BLEEDS(gd.d)){e.bl=(e.bl||rr(.1,.5))-dt;if(e.bl<=0){e.bl=e.elite||e.boss?rr(.15,.3):rr(.5,1);if(decals.length<DCAP[Q]*.85)addDecal(gd.d+'D',e.x+rr(-3,3),e.y+e.r*.55,rr(5,9)*(e.boss?2.2:e.elite?1.5:1),20)}}}
@@ -1492,7 +1668,10 @@ function update(dt){
       else{const dx=P.x-p.x,dy=P.y-p.y,d=Math.hypot(dx,dy)||1;p.vx=dx/d*470;p.vy=dy/d*470;if(d<16)p.dead=true}}
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
     forNear(p.x,p.y,p.r,e=>{if(p.dead||p.hits.includes(e.id))return;p.hits.push(e.id);if(p.k==='fire'){explode(p);return}curW=p.k==='axe'?'cleave':p.k;
-      const cr=hurt(e,p.dmg,p.vx*.3,p.vy*.3);
+      if(p.sure)forceCrit=true;const cr=hurt(e,p.dmg,p.vx*.3,p.vy*.3);
+      /* S25 (R27): Wand of the Restless and Venomfang Daggers */
+      if(p.k==='bone'&&e.dead&&run.leg.restless&&rand()<.25)raiseTemp(e.x,e.y);
+      if(cr&&p.k==='dag'&&run.leg.venom)venomCloud(e.x,e.y);
       /* S23 Masteries: a killing bone spear splits; a dagger crit throws one more */
       if(p.split&&e.dead){const a=Math.atan2(p.vy,p.vx);for(const s of[-.45,.45])projs.push({k:'bone',x:e.x,y:e.y,vx:Math.cos(a+s)*400,vy:Math.sin(a+s)*400,dmg:p.dmg*.5,pierce:2,r:6,life:.7,hits:[e.id],small:1})}
       if(p.echo&&cr){const tg=nearest(e.x,e.y,240,[e.id]);if(tg){const a=Math.atan2(tg.y-e.y,tg.x-e.x);projs.push({k:'dag',x:e.x,y:e.y,vx:Math.cos(a)*560,vy:Math.sin(a)*560,dmg:p.dmg,pierce:1,r:6,life:.5,hits:[e.id]})}}
@@ -1545,7 +1724,9 @@ function bossAI(b,dt,dx,dy,sp){
 }
 function ring(b,n,off){for(let i=0;i<n;i++){const a=(i+off)/n*TAU;eprojs.push({k:'hell',x:b.x,y:b.y,vx:Math.cos(a)*165,vy:Math.sin(a)*165,dmg:12,r:8,life:4})}sfx.ring()}
 function explode(p){
-  p.dead=true;curW='fire';forNear(p.x,p.y,p.ex,e=>{const a=Math.atan2(e.y-p.y,e.x-p.x);hurt(e,p.dmg,Math.cos(a)*150,Math.sin(a)*150)});
+  p.dead=true;curW='fire';forNear(p.x,p.y,p.ex,e=>{const a=Math.atan2(e.y-p.y,e.x-p.x);if(p.over)e.slow=Math.max(e.slow,2.5);hurt(e,p.dmg,Math.cos(a)*150,Math.sin(a)*150)});
+  if(p.over){effects.push({k:'nova',x:p.x,y:p.y,R:p.ex,life:.5,max:.5,col:'170,225,255'});run.shake=Math.max(run.shake,6);flashA=Math.max(flashA,.15);flashC='255,170,90'}
+  if(run.leg.twinstorm)miniChain(p.x,p.y,p.dmg*(p.over?.25:.6));
   effects.push({k:'boom',x:p.x,y:p.y,R:p.ex,life:.35,max:.35});burst(p.x,p.y,16,'255,130,40',p.ex*3,.45,3,true);burst(p.x,p.y,6,'rgba(40,30,25,.7)',p.ex*1.5,.8,4,false,-1);sfx.boom();run.shake=Math.max(run.shake,2.5);
   if(rand()<.5)addDecal('scorch',p.x,p.y+4,p.ex*1.2,14);
   if(p.burn&&zones.filter(z=>z.k==='burn').length<12)zones.push({k:'burn',x:p.x,y:p.y,R:p.ex*.75,dmg:p.dmg*.16,life:2.6,max:2.6,tick:.4,t:0});/* S23 Fireball Mastery */
@@ -1649,8 +1830,14 @@ function updateHud(){
   const left=Math.max(0,runLen()-run.time),hot=run.bossSpawned||run.time%ROUND_T>=ROUND_T-SWARM_T;setT('timer',fmt(Math.ceil(left)));if(hud.last.hot!==hot){hud.last.hot=hot;$('timer').classList.toggle('hot',hot)}setT('killsT',run.kills);setT('soulsT',run.souls);setT('lvlT','Lv '+run.level);
   const xp=Math.round(run.xp/need(run.level)*1000)/10+'%';if(hud.last.xp!==xp){hud.last.xp=xp;$('xpbar').firstElementChild.style.width=xp}
   if(run.boss){const b=Math.max(0,run.boss.hp/run.boss.maxHp*100).toFixed(1)+'%';if(hud.last.b!==b){hud.last.b=b;$('bossFill').style.width=b}}
+  /* S25 (R27): the set skill's mark: bright when ready, with its count or seconds to wait */
+  if(run.set3){const k=run.set3,tm=run.time;let ok,tx;
+    if(k==='barbarian'){ok=run.rageT>tm;tx=ok?'Rage':run.rageN+'/50'}
+    else if(k==='necromancer'){ok=run.bone>0;tx=ok?String(Math.ceil(run.bone)):Math.ceil(run.boneT-tm)+'s'}
+    else{const r=k==='sorceress'?run.ovT:run.vanT;ok=tm>=r;tx=ok?'Ready':Math.ceil(r-tm)+'s'}
+    const v=(ok?1:0)+tx;if(hud.last.set!==v){hud.last.set=v;const si=$('setI');si.classList.toggle('ready',ok);si.lastChild.textContent=tx}}
 }
-function soulsEarned(){const base=run.souls+Math.floor(run.kills/15)+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(base*(1+.15*meta('greed')+.1*townLv('watch')))}}
+function soulsEarned(){const base=run.souls+Math.floor(run.kills/15)+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(base*(1+.15*meta('greed')+.1*townLv('watch')+(S&&S.souls||0)/100))}}
 function showEnd(win){
   const e=soulsEarned();save.souls+=e.total;save.runs++;save.best.time=Math.max(save.best.time,Math.floor(run.time));save.best.kills=Math.max(save.best.kills,run.kills);if(win)save.best.wins=(save.best.wins||0)+1;
   /* S07: a lost night burns one standing building (its bonus drops a level until repaired) */
@@ -1661,8 +1848,9 @@ function showEnd(win){
   $('endS').textContent=win?`Malgrath, the Ash Lord, is slain. The ${md.name} is yours.`:run.bossSpawned?'The Ash Lord claims another soul.':run.mode==='full'?`${md.name}: fallen in round ${run.round+1} of ${md.rounds}, ${left} before the Ash Lord.`:`${md.name}: the Ash Lord was ${left} away.`;
   $('endStats').innerHTML=[[fmt(run.time),'survived'],[run.kills,'slain'],['Lv '+run.level,'reached'],[HEROES[run.hero].name,'hero']].map(([b,s])=>`<div><b>${b}</b><small>${s}</small></div>`).join('');
   $('endSouls').textContent=e.total;
-  $('endBreak').textContent=`${run.souls} gathered · ${Math.floor(run.kills/15)} from kills · ${Math.floor(run.time/10)} for time${win?` · ${md.win} for the Ash Lord`:''}${meta('greed')?' · Greed bonus':''}${townLv('watch')?' · Watchtower bonus':''}`;
+  $('endBreak').textContent=`${run.souls} gathered · ${Math.floor(run.kills/15)} from kills · ${Math.floor(run.time/10)} for time${win?` · ${md.win} for the Ash Lord`:''}${meta('greed')?' · Greed bonus':''}${townLv('watch')?' · Watchtower bonus':''}${S&&S.souls?' · Gear bonus':''}`;
   $('endBurn').textContent=run.burned?`The horde burned the ${HUBN[run.burned]}. Repair it in town.`:'';
+  $('endCache').textContent=run.cacheD?`The Ash Lord left a sealed cache${run.mode==='full'?' (Rare or better)':''}. The Gambler opens it for free in town.`:'';
   setState('end');
 }
 function buildMenu(){
@@ -1679,8 +1867,8 @@ const townHurt=k=>!!(save.dmg&&save.dmg[k]);
 const townLv=k=>Math.max(0,townRaw(k)-(townHurt(k)?1:0));
 const townCost=l=>[40,110][l];
 const repairCost=l=>[20,55][Math.max(0,l-1)];
-const HUBB={chapel:{w:96,h:80,fx:.18,row:0},gate:{w:88,h:76,fx:.5,row:0},watch:{w:60,h:122,fx:.83,row:0},altar:{w:66,h:46,fx:.14,row:1},wall:{w:100,h:54,fx:.86,row:1},shop:{w:74,h:62,fx:.5,row:1}};
-const HUBN={chapel:'Chapel',gate:'Gate',watch:'Watchtower',altar:'Altar of Souls',wall:'Rampart',shop:'Merchant'};
+const HUBB={chapel:{w:96,h:80,fx:.18,row:0},gate:{w:88,h:76,fx:.5,row:0},watch:{w:60,h:122,fx:.83,row:0},altar:{w:66,h:46,fx:.14,row:1},wall:{w:100,h:54,fx:.86,row:1},shop:{w:74,h:62,fx:.5,row:1},gamb:{w:56,h:58,fx:.3,row:1,up:26}};
+const HUBN={chapel:'Chapel',gate:'Gate',watch:'Watchtower',altar:'Altar of Souls',wall:'Rampart',shop:'Merchant',gamb:'Gambler'};
 const HANG={barbarian:Math.PI,necromancer:Math.PI*1.27,sorceress:Math.PI*1.73,rogue:0};
 const HUB={G:null,heroes:{},hp:{},rects:{},fl:[],dark:new Map()};
 let hubSel={t:'hero'};
@@ -1688,7 +1876,7 @@ function hubInfo(){
   const nm=$('hubName'),tx=$('hubTxt'),pb=$('playB'),tb=$('townBuy');
   if(hubSel.t==='b'){const k=hubSel.k,b=TOWN.find(x=>x.k===k),r=townRaw(k),hurt=townHurt(k),st=hurt?'Burning':['In ruins','Rebuilt','Fortified'][r];
     nm.textContent=b.n;tx.textContent=`${st}. ${b.fx}.${hurt?' The horde set it alight: one level of its bonus is lost until you repair it.':''}`;
-    pb.hidden=true;tb.hidden=false;$('modeBtns').hidden=true;
+    pb.hidden=true;tb.hidden=false;$('modeBtns').hidden=true;$('gearB').hidden=true;
     if(hurt){const c=repairCost(r);tb.innerHTML=`Repair · <span class="soul"></span>${c}`;tb.disabled=save.souls<c}
     else if(r>=2){tb.textContent='Fortified';tb.disabled=true}
     else{const c=townCost(r);tb.innerHTML=`${r?'Fortify':'Rebuild'} · <span class="soul"></span>${c}`;tb.disabled=save.souls<c}
@@ -1698,7 +1886,7 @@ function hubInfo(){
   if(hubSel.t==='gate'){nm.textContent='The Gate';tx.textContent=`Beyond it, the night and the horde. ${h.name} ${own?'is ready.':'must be unlocked first.'}`}
   else{nm.textContent=h.name;tx.textContent=`${h.perk}. Tap a building to visit it.`}
   if(own){pb.textContent='Descend';pb.disabled=false}else{pb.textContent=`Unlock · ${h.cost} souls`;pb.disabled=save.souls<h.cost}
-  $('modeBtns').hidden=!own;syncMode();
+  $('modeBtns').hidden=!own;$('gearB').hidden=!own;syncMode();
 }
 function syncMode(){const m=MODES[SET.mode]?SET.mode:'short';for(const b of $('modeBtns').children){const on=b.dataset.m===m;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}}
 $('modeBtns').onclick=e=>{const b=e.target.closest('button');if(!b)return;auInit();SET.mode=b.dataset.m;saveSet();syncMode()};
@@ -1729,6 +1917,17 @@ function drawBuilding(g,b,l,base){
     g.fillStyle='#2b201a';g.beginPath();g.arc(fx,T+h*.28,w*.085,0,TAU);g.fill();g.fillStyle='#050302';g.beginPath();g.arc(fx+1,T+h*.3,w*.055,0,TAU);g.fill();
     g.fillStyle='#ffb868';g.fillRect(fx-2,T+h*.29,1.6,1.6);g.fillRect(fx+2.4,T+h*.29,1.6,1.6);
     g.fillStyle='#3a2a20';g.fillRect(fx+w*.06,T+h*.5,w*.1,3);return}
+  if(b.k==='gamb'){/* S25 (R27): the Gambler, hooded, behind a small table with a dice cup, two dice and a candle; an iron-bound chest beside him */
+    const fx=L+w*.22;
+    g.fillStyle='#1a1220';g.beginPath();g.moveTo(fx-w*.2,base);g.quadraticCurveTo(fx-w*.17,T+h*.42,fx,T+h*.16);g.quadraticCurveTo(fx+w*.17,T+h*.42,fx+w*.2,base);g.closePath();g.fill();
+    g.fillStyle='#2a1f2c';g.beginPath();g.arc(fx,T+h*.25,w*.11,0,TAU);g.fill();g.fillStyle='#050302';g.beginPath();g.arc(fx+1,T+h*.27,w*.07,0,TAU);g.fill();
+    g.fillStyle='#c9a3ff';g.fillRect(fx-2.4,T+h*.26,1.6,1.6);g.fillRect(fx+2,T+h*.26,1.6,1.6);
+    const tL=L+w*.16,tR=L+w*.66,tY=T+h*.6;g.fillStyle='#4a3428';g.fillRect(tL,tY,tR-tL,4);g.fillStyle='#2a1a12';g.fillRect(tL+2,tY+4,3,base-tY-4);g.fillRect(tR-5,tY+4,3,base-tY-4);
+    g.fillStyle='#5a3a22';g.beginPath();g.moveTo(tL+2,tY);g.lineTo(tL+3.5,tY-9);g.lineTo(tL+9.5,tY-9);g.lineTo(tL+11,tY);g.closePath();g.fill();
+    g.fillStyle='#e8dcc1';g.fillRect(tL+13,tY-4,4,4);g.fillRect(tL+18.5,tY-4,4,4);g.fillStyle='#7a0d10';g.fillRect(tL+14.4,tY-2.6,1.2,1.2);g.fillRect(tL+19,tY-3.4,1.1,1.1);g.fillRect(tL+21,tY-1.4,1.1,1.1);
+    g.fillStyle='#d8c8a8';g.fillRect(tR-5,tY-8,2.6,8);g.fillStyle='#ffcf6a';g.fillRect(tR-4.7,tY-11,2,3);
+    const cL=L+w*.7,cT=base-h*.3;g.fillStyle='#4a3428';g.fillRect(cL,cT,R-cL,base-cT);g.fillStyle='#5e4132';g.beginPath();g.moveTo(cL,cT);g.quadraticCurveTo((cL+R)/2,cT-h*.16,R,cT);g.closePath();g.fill();
+    g.fillStyle='#6a6a70';g.fillRect(cL+2.5,cT-h*.08,2.4,base-cT+h*.08);g.fillRect(R-4.9,cT-h*.08,2.4,base-cT+h*.08);g.fillStyle='#ffd27a';g.fillRect((cL+R)/2-2,cT+3,4,5);return}
   if(b.k==='altar'){/* stone slab, a dark obelisk, soul light */
     g.fillStyle='#2e231e';g.beginPath();g.moveTo(x-w*.13,T+h*.4);g.lineTo(x,T-h*.35);g.lineTo(x+w*.13,T+h*.4);g.closePath();g.fill();
     g.fillStyle='#3e3029';g.fillRect(L+w*.12,T+h*.5,w*.76,h*.5);g.fillStyle='#57463b';g.fillRect(L,T+h*.36,w,h*.16);
@@ -1768,11 +1967,12 @@ function renderHub(dt){
   ctx.globalCompositeOperation='lighter';drawGlow('fire',G.cx,G.fy,G.rx*2.1,.32);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
   /* buildings: back row behind the heroes */
   const items=[];HUB.rects={};
-  for(const k in HUBB){const d=HUBB[k],bs=s*(d.row?.82:1),x=G.x+G.w*d.fx,base=d.row?G.front:G.back,r={x0:x-d.w*bs/2-6,x1:x+d.w*bs/2+6,y0:base-(d.h+30)*bs,y1:base+20};HUB.rects[k]=r;
+  for(const k in HUBB){const d=HUBB[k],bs=s*(d.row?.82:1),x=G.x+G.w*d.fx,base=(d.row?G.front:G.back)-(d.up||0)*s,r={x0:x-d.w*bs/2-6,x1:x+d.w*bs/2+6,y0:base-(d.h+30)*bs,y1:base+20};HUB.rects[k]=r;
     const it={y:base,draw:()=>{const sel=(hubSel.t==='b'&&hubSel.k===k)||(hubSel.t==='gate'&&k==='gate'),town=k in{chapel:1,watch:1,wall:1},l=town?townRaw(k):2,hurt=town&&townHurt(k);
       if(sel){ctx.globalCompositeOperation='lighter';drawGlow('gold',x,base-d.h*bs*.5,d.w*bs*.9,.35);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
       if(k==='gate'){ctx.globalCompositeOperation='lighter';drawGlow('red',x,base-d.h*bs*.2,d.w*bs*.75,.5+Math.sin(t*2)*.08);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
       if(k==='altar'){ctx.globalCompositeOperation='lighter';drawGlow('purple',x,base-d.h*bs*.8,d.w*bs*.8,.45+Math.sin(t*2.6)*.1);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
+      if(k==='gamb'){ctx.globalCompositeOperation='lighter';drawGlow('gold',x+d.w*bs*.12,base-d.h*bs*.52,d.w*bs*.6,.38+Math.sin(t*6)*.05+Math.sin(t*15)*.03);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
       if(k==='shop'){ctx.globalCompositeOperation='lighter';drawGlow('gold',x+d.w*bs*.44,base-d.h*bs*.66,d.w*bs*.55,.45+Math.sin(t*5)*.05+Math.sin(t*13)*.03);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
       ctx.save();ctx.translate(x,base);ctx.scale(bs,bs);drawBuilding(ctx,{k,w:d.w,h:d.h,x:0},l,0);if(hurt){ctx.fillStyle='rgba(10,5,3,.45)';ctx.fillRect(-d.w/2,-d.h,d.w,d.h)}ctx.restore();
       it.label={x,y:base+11,txt:HUBN[k]+(town?' '+(hurt?'🔥':['·','I','II'][l]):''),col:hurt?'#ff9a6a':town&&!l?'#a8957a':'#e6d6b8',sel,hurt,top:base-d.h*bs,bs}}};
@@ -1807,7 +2007,7 @@ function renderHub(dt){
 $('hubSpace').addEventListener('click',e=>{auInit();const x=e.clientX,y=e.clientY,G=HUB.G;if(!G)return;
   let best=null,bd=1e9;for(const id in HUB.hp){const p=HUB.hp[id],d=Math.hypot(x-p.x,(y-p.cy)*.75);if(d<40*G.s+6&&d<bd){bd=d;best=id}}
   if(best){save.hero=best;persist();sfx.tick();hubSel={t:'hero'};buildMenu();return}
-  for(const k of['wall','altar','shop','chapel','gate','watch']){const r=HUB.rects[k];if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();if(k==='altar'){altarHero=null;buildAltar();setState('altar');return}if(k==='shop'){buildShop();setState('shop');return}hubSel=k==='gate'?{t:'gate'}:{t:'b',k};hubInfo();return}}
+  for(const k of['gamb','wall','altar','shop','chapel','gate','watch']){const r=HUB.rects[k];if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();if(k==='altar'){altarHero=null;buildAltar();setState('altar');return}if(k==='shop'){buildShop();setState('shop');return}if(k==='gamb'){buildGamb();setState('gamb');return}hubSel=k==='gate'?{t:'gate'}:{t:'b',k};hubInfo();return}}
   hubSel={t:'hero'};hubInfo()});
 $('townBuy').onclick=()=>{if(hubSel.t!=='b')return;const k=hubSel.k,r=townRaw(k);auInit();
   if(townHurt(k)){const c=repairCost(r);if(save.souls<c)return;save.souls-=c;delete save.dmg[k]}
@@ -1854,6 +2054,60 @@ function buildShop(){
   if(full){const p=document.createElement('p');p.className='note';p.textContent='Your belt is full. Use an item in the night to make room.';list.appendChild(p)}
 }
 $('shopBack').onclick=()=>{buildMenu();setState('menu')};
+/* S25 (R27): the Gambler's page: the chosen hero's gear, the Ash Lord's Caches, three gambles and the shared bag; a new piece is shown in #gearM */
+const GA={weapon:'a weapon',armour:'armour',amulet:'an amulet'};
+function gLineEls(it,cmp){/* the piece's bonuses as list items; with cmp (the piece it would replace) green is better, red is worse */
+  const ul=document.createElement('ul');ul.className='gx';const add=(t,c)=>{const li=document.createElement('li');li.textContent=t;if(c)li.className=c;ul.appendChild(li)};
+  const sum=(o,k)=>o?gLines(o).filter(a=>a[0]===k).reduce((s,a)=>s+a[1],0):0,mine=gLines(it);
+  for(const[k,v]of mine){let c='';if(cmp!==undefined&&k!=='head'){const o=sum(cmp,k);c=v>o?'up':v<o?'down':''}add(GBX[k].d(v),c)}
+  if(cmp)for(const[k,v]of gLines(cmp))if(!mine.some(a=>a[0]===k))add('Loses: '+GBX[k].d(v),'down');
+  if(it.L)add(GLEG[it.L].d,'fx');
+  if(it.set){const st=GSET[it.set],n=gSetN(it.set);add(`${st.n}: ${n} of 3 worn`,'set');add('2 pieces: '+st.two,n>=2?'set':'off');add('3 pieces: '+st.three,n>=3?'set':'off')}
+  return ul}
+function gRow(list,ic,title,tag,tagCol,body,btns,locked){const r=document.createElement('div');r.className='meta'+(locked?' locked':'');
+  const a=document.createElement('div');a.appendChild(ic);const b=document.createElement('div'),t=document.createElement('b');t.textContent=title;b.appendChild(t);
+  if(tag){const sp=document.createElement('span');sp.className='tier';sp.textContent=tag;if(tagCol)sp.style.color=tagCol;t.appendChild(sp)}
+  if(body)b.appendChild(body);r.append(a,b);
+  if(btns&&btns.length){if(btns.length===1)r.appendChild(btns[0]);else{const c=document.createElement('div');c.className='gbtns';c.append(...btns);r.appendChild(c)}}
+  list.appendChild(r);return r}
+function gBtn(html,cls,ok,fn,title){const b=document.createElement('button');b.className='buy'+(cls?' '+cls:'');b.innerHTML=html;b.disabled=!ok;if(title)b.title=title;b.onclick=()=>{if(b.disabled)return;auInit();fn(b)};return b}
+const gP=(t,cls)=>{const p=document.createElement('p');p.textContent=t;if(cls)p.className=cls;return p};
+function gWear(it,h){const g=gearOf(h),old=g[it.s],bg=bag(),i=bg.indexOf(it);if(i>=0)bg.splice(i,1);g[it.s]=it;if(old){if(bg.length<BAG_MAX)bg.push(old);else save.souls+=ASH_BACK}}
+function gGamble(h,s,min,c){if(c)save.cache.shift();else save.souls-=GAMBLE_COST;save.pend=gRoll(h,s,min);persist();sfx.chest();if(save.pend.t>=3)sfx.level();buildGamb()}
+function buildGamb(){
+  const h=save.hero,own=!!save.heroes[h],g=gearOf(h),bg=bag(),busy=!!save.pend;$('purse4').textContent=save.souls;$('gearH').textContent=`${HEROES[h].name}'s gear`;
+  const gl=$('gearList');gl.innerHTML='';
+  for(const s of GSLOTS){const it=g[s];
+    if(it)gRow(gl,gearIcon(it,44),gName(it),`${GSLOTN[s]} · ${GTIER[it.t].n}`,GTIER[it.t].col,gLineEls(it),[gBtn('Take off','alt',bg.length<BAG_MAX,()=>{g[s]=null;bg.push(it);persist();sfx.tick();buildGamb()},bg.length<BAG_MAX?'':'Your bag is full')]);
+    else gRow(gl,icon('g_'+s,44),'Nothing worn',GSLOTN[s],'',gP(`Gamble for ${GA[s]} below.`),null,true)}
+  const cl=$('gambList');cl.innerHTML='';const cs=Array.isArray(save.cache)?save.cache:[];
+  if(cs.length){const c=cs[0];gRow(cl,icon('cache',44),"Ash Lord's Cache",cs.length>1?`${cs.length} sealed`:'sealed','#ffd27a',gP(`A sealed piece for the ${HEROES[c.h].name}, ${GTIER[c.min].n} or better. The Gambler opens it for free.`),[gBtn('Open','',!busy,()=>gGamble(c.h,pick(GSLOTS),c.min,1))])}
+  for(const s of GSLOTS)gRow(cl,icon('g_'+s,44),`Gamble ${GA[s]}`,'','',gP(`A sealed ${s==='armour'?'piece of armour':s} for the ${HEROES[h].name}.`),[gBtn(`<span class="soul"></span>${GAMBLE_COST}`,'',own&&!busy&&save.souls>=GAMBLE_COST,()=>gGamble(h,s))]);
+  const n=(save.gamb&&save.gamb.n)||0;
+  $('gambNote').textContent=own?`Worn 45% · Fine 30% · Rare 17% · Legendary 5% · Set 3%. A Legendary or Set piece is sure to come within ${Math.max(1,LUCK_N+1-n)} gambles.`:`Unlock the ${HEROES[h].name} in town first (${HEROES[h].cost} souls).`;
+  $('bagH').textContent=`Bag · ${bg.length} of ${BAG_MAX}`;const bl=$('bagList');bl.innerHTML='';
+  for(const it of bg){const fit=gFits(it,h);
+    gRow(bl,gearIcon(it,44),gName(it),`${GSLOTN[it.s]} · ${GTIER[it.t].n}${fit?'':' · '+HEROES[it.h].name+' only'}`,GTIER[it.t].col,gLineEls(it),
+      [gBtn('Wear','alt',fit&&own,()=>{gWear(it,h);persist();sfx.tick();buildGamb()},fit?'':`Only for the ${HEROES[it.h].name}`),
+       gBtn(`Ash · <span class="soul"></span>${ASH_BACK}`,'alt',true,b=>{if(!b.dataset.arm){b.dataset.arm=1;b.textContent='Sure?';return}bg.splice(bg.indexOf(it),1);save.souls+=ASH_BACK;persist();sfx.soul();buildGamb()})],!fit)}
+  if(!bg.length)bl.appendChild(gP('Spare pieces wait here. All heroes share the bag.','note'));
+  if(busy)showReveal();
+}
+function showReveal(){const it=save.pend;if(!it)return;const h=save.hero,fit=gFits(it,h)&&!!save.heroes[h],cur=gearOf(h)[it.s],full=bag().length>=BAG_MAX;
+  $('gmSub').textContent=`${GSLOTN[it.s]} · ${GTIER[it.t].n}`;const ic=$('gmIco');ic.innerHTML='';ic.appendChild(gearIcon(it,72));
+  const nm=$('gmName');nm.textContent=gName(it);nm.style.color=GTIER[it.t].col;
+  const gl=$('gmList');gl.innerHTML='';gl.append(...gLineEls(it,fit?cur:undefined).children);
+  $('gmNow').textContent=!fit?(gClass(it)&&it.h!==h?`Made for the ${HEROES[it.h].name}: keep it in the bag for them.`:`Unlock the ${HEROES[h].name} to wear it.`):cur?`Now worn: ${gName(cur)}`:`The ${HEROES[h].name} wears nothing here yet.`;
+  const wb=$('gmWear');wb.disabled=!fit;wb.textContent=fit&&cur&&full?`Wear it · old one to ash +${ASH_BACK}`:'Wear it';
+  const kb=$('gmKeep');kb.disabled=full;kb.textContent=full?'Bag is full':'Keep in the bag';
+  const ab=$('gmAsh');delete ab.dataset.arm;ab.textContent=`Turn to ash · ${ASH_BACK} souls`;
+  $('gearM').classList.add('on')}
+function gDone(){save.pend=null;persist();$('gearM').classList.remove('on');buildGamb()}
+$('gmWear').onclick=()=>{const it=save.pend;if(!it||$('gmWear').disabled)return;auInit();gWear(it,save.hero);sfx.tick();gDone()};
+$('gmKeep').onclick=()=>{const it=save.pend;if(!it||bag().length>=BAG_MAX)return;auInit();bag().push(it);sfx.tick();gDone()};
+$('gmAsh').onclick=()=>{const b=$('gmAsh');if(!save.pend)return;auInit();if(!b.dataset.arm){b.dataset.arm=1;b.textContent=`Sure? · +${ASH_BACK} souls`;return}save.souls+=ASH_BACK;sfx.soul();gDone()};
+$('gambBack').onclick=()=>{buildMenu();setState('menu')};
+$('gearB').onclick=()=>{auInit();sfx.tick();buildGamb();setState('gamb')};
 $('pauseB').onclick=()=>{if(state!=='play')return;const bl=$('buildList');bl.innerHTML='';
   for(const w of run.weapons){const d=document.createElement('div');d.appendChild(icon(w.id,44));d.insertAdjacentHTML('beforeend',`<span>${w.lvl}</span>`);bl.appendChild(d)}
   for(const k in run.passives){const d=document.createElement('div');d.appendChild(icon(k,44));d.insertAdjacentHTML('beforeend',`<span>${run.passives[k]}</span>`);bl.appendChild(d)}
@@ -1985,9 +2239,11 @@ function render(dt){
       if(P.atkT>0){const k=Math.sin((1-P.atkT/.22)*Math.PI),c=Math.cos(P.atkA);ox=c*3.5*k;lean+=(c>=0?1:-1)*.2*k}
       const kh=clamp((run.hurt-.2)/.15,0,1);if(kh)lean-=P.face*.22*kh;
       /* S23: the hero rises through the air on a Leap Slam and turns round and round in a Whirlwind */
-      const hop=run.leap?Math.sin(Math.min(1,run.leap.t/run.leap.T)*Math.PI)*48:0,ww=getW('whirlwind'),spin=ww&&ww.spin>0;
+      const hop=run.leap?Math.sin(Math.min(1,run.leap.t/run.leap.T)*Math.PI)*48:0,ww=getW('whirlwind'),spin=(ww&&ww.spin>0)||run.spin2>0;
       ctx.drawImage(SHADOW,P.x-14+hop*.1,P.y+9+hop*.05,28-hop*.2,10-hop*.06);
-      if(run.furyT>run.time){ctx.globalCompositeOperation='lighter';drawGlow('red',P.x,P.y-8-hop,46,(.3+Math.sin(now*9)*.08)*Math.min(1,run.furyT-run.time));ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}/* S24: Fury Tonic */
+      const fury=Math.max(run.furyT,run.rageT)-run.time;/* S24: Fury Tonic; S25: Blood Rage */
+      if(fury>0){ctx.globalCompositeOperation='lighter';drawGlow('red',P.x,P.y-8-hop,run.rageT>run.time?56:46,(.3+Math.sin(now*9)*.08)*Math.min(1,fury));ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
+      if(run.bone>0){ctx.save();ctx.strokeStyle=`rgba(230,220,200,${.3+.4*run.bone/30})`;ctx.lineWidth=2.2;ctx.setLineDash([6,5]);ctx.lineDashOffset=-now*18;ctx.beginPath();ctx.ellipse(P.x,P.y-7-hop,18,23,0,0,TAU);ctx.stroke();ctx.restore()}/* S25: Bone Armour */
       if(P.inv>0&&Math.floor(now*14)%2)continue;
       const fc=spin?(Math.sin(now*26)>0?1:-1):P.face;if(spin)lean=Math.sin(now*26)*.25;
       const set=run.hurt>.22?fr.f:fr.n;sprDraw(set[fc<0?1:0],P.x+ox,P.y-bob-4-hop,sp.w*(1-br*.006),sp.h*(1+br*.018),lean);continue}
@@ -2067,7 +2323,7 @@ function render(dt){
   drawGlow('fire',P.x,P.y-6,tor*.85,.08);
   for(let i=0;i<_lights.length;i+=3){const ty=_lights[i+2],x=_lights[i],y=_lights[i+1];if(ty===2)drawGlow('red',x,y,60,.12+Math.sin(now*1.5+x)*.04);else{drawGlow('fire',x,y,(ty?48:34)+Math.sin(now*9+x)*3,.55);if(ty)drawGlow('gold',x,y-4,14,.6)}}
   for(const g of gems){if(Math.abs(g.x-P.x)>VW/2+30||Math.abs(g.y-P.y)>VH/2+30)continue;if(g.k==='xp')drawGlow(g.tier===2?'red':g.tier===1?'green':'blue',g.x,g.y,g.tier*5+12,.5);else if(g.k==='soul')drawGlow('purple',g.x,g.y,22,.85);else if(g.k==='chest'){drawGlow('gold',g.x,g.y,50+Math.sin(now*5)*6,.8);if(rand()<.15)addP(g.x+rr(-12,12),g.y,0,-30,.8,1.8,'255,210,120',true,-1)}else drawGlow('red',g.x,g.y,18,.5)}
-  for(const p of projs){if(p.k==='fire'){const sp=Math.hypot(p.vx,p.vy)||1,ux=p.vx/sp,uy=p.vy/sp;for(let i=3;i>0;i--)drawGlow('fire',p.x-ux*i*8,p.y-uy*i*8,22-i*4,.35);drawGlow('fire',p.x,p.y,28,1);drawGlow('white',p.x,p.y,9,.95)}else if(p.k==='bone')drawGlow('green',p.x,p.y,15,.4)}
+  for(const p of projs){if(p.k==='fire'){const sp=Math.hypot(p.vx,p.vy)||1,ux=p.vx/sp,uy=p.vy/sp,z=p.over?1.9:1;for(let i=3;i>0;i--)drawGlow('fire',p.x-ux*i*8*z,p.y-uy*i*8*z,(22-i*4)*z,.35);drawGlow('fire',p.x,p.y,28*z,1);drawGlow('white',p.x,p.y,9*z,.95)}else if(p.k==='bone')drawGlow('green',p.x,p.y,15,.4)}
   for(const p of eprojs)if(p.k==='hell'){drawGlow('red',p.x,p.y,22,1);drawGlow('fire',p.x,p.y,10,1)}
   if(sk&&sk.pos&&!run.over)for(const[x,y]of sk.pos)drawGlow('fire',x,y-6,24,.65);
   /* S23: glows for meteors (falling in the last 0.35 s), burning ground, poison and the curse */
@@ -2160,7 +2416,7 @@ function perf(ms){
   if(ms<3||ms>150||document.hidden)return;ema+=(ms-ema)*.05;
   if(state==='play'&&hitStop<=0){if(ema>21.5){slowT+=ms/1000;if(slowT>1.6&&Q<QL.length-1){Q++;QS=QL[Q];slowT=0;ema=16;nP=Math.min(nP,QS.parts);resize()}}else slowT=Math.max(0,slowT-ms/3000)}
 }
-const inGame=()=>run&&state!=='menu'&&state!=='altar'&&state!=='shop'&&!(state==='settings'&&setFrom==='menu');
+const inGame=()=>run&&state!=='menu'&&state!=='altar'&&state!=='shop'&&state!=='gamb'&&!(state==='settings'&&setFrom==='menu');
 function frame(now){
   requestAnimationFrame(frame);
   const raw=now-last,dt=Math.min(.05,raw/1000);last=now;perf(raw);
@@ -2178,7 +2434,9 @@ requestAnimationFrame(frame);
 if(DEBUG)window.__AH={SPR,CORPSE,GROUND,DEC,DECOR,get fps(){return fpsV},get q(){return Q},get state(){return state},get run(){return run},get P(){return P},get effects(){return effects},get enemies(){return enemies},stats:()=>({fps:Math.round(fpsV),q:Q,enemies:enemies.length,parts:nP,lights:nL,voices:AU.voices,decals:decals.length,dpr:DPR}),
   jump(t){if(!run)return;run.time=t;while(run.ei<run.elites.length&&run.elites[run.ei].t<t)run.ei++;while(run.ev<run.evs.length&&run.evs[run.ev].t<t)run.ev++},god(){if(S){S.maxHp=99999;P.hp=99999;S.armor=999}},lvl(){if(run)run.pending++},setQ(q){Q=q;QS=QL[q];resize()},hurtMe(f){P.hp=S.maxHp*f},chest(){if(run)drop('chest',P.x+20,P.y)},
   /* S23 test helpers */start(h,m){newRun(h,m||'short')},give(id,l){const w=getW(id);if(w)w.lvl=l;else{addWeapon(id);getW(id).lvl=l}if(id==='skeletons')syncMinions()},pool:()=>offerPool().map(o=>o.id+':'+o.lvl),get save(){return save},get zones(){return zones},get projs(){return projs},altar(){altarHero=null;buildAltar();setState('altar')},
-  /* S24 test helpers */shop(){buildShop();setState('shop')},use:i=>useItem(i),get S(){return S}};
+  /* S24 test helpers */shop(){buildShop();setState('shop')},use:i=>useItem(i),get S(){return S},
+  /* S25 test helpers */gamb(){buildGamb();setState('gamb')},roll:(h,s,m)=>gRoll(h,s,m),wear(it,h){gWear(it,h||save.hero);persist()},setN:h=>gSetN(h),get minions(){return minions},GLEG,GSET,
+    item(h,s,t,o){return Object.assign({u:'t'+((rand()*1e6)|0),h,s,t,x:[]},o||{})}};
 }
 </script>
 </body>
