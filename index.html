@@ -65,6 +65,16 @@ h1,h2,h3{font-family:Cinzel,Georgia,serif;margin:0;line-height:1.05;text-wrap:ba
 #hubTxt{margin:0;font-size:15px;text-align:center;color:var(--ink);min-height:2.9em}
 #hubBtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 #hubBtns [hidden]{display:none}
+/* S27 (R29): the panel is a sheet that only opens when the Gate, a hero or a building is tapped; the town fills the screen */
+#hubPanel{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:6;width:min(calc(100% - 20px),440px);transform:translateX(-50%);transition:transform .26s ease,opacity .2s;padding-top:14px}
+#hubPanel.shut{transform:translate(-50%,calc(100% + 30px));opacity:0;pointer-events:none}
+#hubX{position:absolute;top:4px;right:6px;width:36px;height:36px;border:0;background:none;color:var(--mute);font:400 26px/1 Georgia,serif;cursor:pointer}
+#hubX:hover,#hubX:focus-visible{color:#ffd9a8}
+#hubPanel .best{margin:0;font-size:13px}
+#hubPanel .best:empty,#hubPanel .best[hidden]{display:none}
+#setM #sync{margin:4px 0 0;text-align:center}
+#gamb [hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){#hubPanel{transition:none}}
 /* S22 (R25): Short Night / Full Night choice above Descend; the timer turns red for the swarm and the boss */
 #modeBtns{display:flex;gap:8px;width:100%;max-width:400px}
 #modeBtns[hidden]{display:none}
@@ -209,14 +219,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
 </div>
 
 <div id="menu" class="screen on">
-  <button class="ib muteB corner r1" aria-label="Sound"></button>
-  <button class="ib setB corner r2" aria-label="Settings"><svg viewBox="0 0 20 20" fill="none" stroke="#e6d6b8" stroke-width="1.7"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/><circle cx="10" cy="10" r="5.4"/></svg></button>
+  <button class="ib setB corner r1" aria-label="Settings and sound"><svg viewBox="0 0 20 20" fill="none" stroke="#e6d6b8" stroke-width="1.7"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/><circle cx="10" cy="10" r="5.4"/></svg></button>
   <header class="title"><h1>Ashen<br>Horde</h1><div class="orn"></div><p>Survive the night. Slay the Ash Lord.</p></header>
   <div class="purse"><span class="soul"></span><span id="purse">0</span>&nbsp;souls</div>
   <div id="hubSpace" role="img" aria-label="The town square: the heroes sit around a fire pit; the Gate, Chapel, Watchtower, Altar of Souls and Rampart stand around it, the Merchant waits by his cart and the Gambler sits at his table"></div>
-  <div id="hubPanel"><b id="hubName"></b><p id="hubTxt"></p><div id="modeBtns" role="group" aria-label="Length of the night"><button data-m="short" aria-pressed="true"><b>Short Night</b><small>5 min · 1 boss</small></button><button data-m="full" aria-pressed="false"><b>Full Night</b><small>30 min · 6 rounds</small></button></div><div id="hubBtns"><button id="playB" class="big">Descend</button><button id="townBuy" class="ghost"></button><button id="gearB" class="ghost">Gear</button></div></div>
-  <p id="best" class="best"></p>
-  <p id="sync" class="note"></p>
+  <div id="hubPanel" class="shut" role="dialog" aria-labelledby="hubName"><button id="hubX" aria-label="Close">×</button><b id="hubName"></b><p id="hubTxt"></p><div id="modeBtns" role="group" aria-label="Length of the night"><button data-m="short" aria-pressed="true"><b>Short Night</b><small>5 min · 1 boss</small></button><button data-m="full" aria-pressed="false"><b>Full Night</b><small>30 min · 6 rounds</small></button></div><p id="best" class="best"></p><div id="hubBtns"><button id="playB" class="big">Descend</button><button id="townBuy" class="ghost"></button></div></div>
 </div>
 
 <div id="altar" class="screen">
@@ -247,13 +254,13 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
 </div>
 
 <div id="gamb" class="screen">
-  <h2>The Gambler</h2>
+  <h2 id="gambT">The Gambler</h2>
   <div class="orn"></div>
-  <p class="note">“Sealed and unseen, wanderer. Pay, and let fate decide.”</p>
+  <p class="note" id="gambQ">“Sealed and unseen, wanderer. Pay, and let fate decide.”</p>
   <div class="purse"><span class="soul"></span><span id="purse4">0</span>&nbsp;souls</div>
   <h3 class="altH" id="gearH">Your gear</h3>
   <div id="gearList"></div>
-  <h3 class="altH">Gamble</h3>
+  <h3 class="altH" id="gambH">Gamble</h3>
   <div id="gambList"></div>
   <p class="note" id="gambNote"></p>
   <h3 class="altH" id="bagH">Bag</h3>
@@ -304,6 +311,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <label class="sl"><span>Music</span><input type="range" id="volM" min="0" max="100" step="1"><output id="volMo">70</output></label>
   <label class="sl"><span>Effects</span><input type="range" id="volS" min="0" max="100" step="1"><output id="volSo">85</output></label>
   <div class="toggles"><button id="muteT" class="ghost">Sound: On</button><button id="shakeT" class="ghost">Screen shake: On</button><button id="goreT" class="ghost">Blood: On</button></div>
+  <p id="sync" class="note"></p>
   <button id="setBack" class="big">Done</button>
 </div></div>
 
@@ -1928,7 +1936,7 @@ function showEnd(win){
 }
 function buildMenu(){
   $('purse').textContent=save.souls;$('purse2').textContent=save.souls;
-  const bt=save.best;$('best').textContent=bt.time?`Longest night ${fmt(bt.time)} · Most slain ${bt.kills}${bt.wins?` · Ash Lord slain ${bt.wins}×`:''}`:'Drag anywhere to move. Your attacks are automatic.';
+  const bt=save.best;$('best').textContent=bt.time?`Longest night ${fmt(bt.time)} · Most slain ${bt.kills}${bt.wins?` · Ash Lord slain ${bt.wins}×`:''}`:'';
   hubInfo();
 }
 /* S06/S07: the town is the home and the main menu. Chapel, Watchtower and Rampart are ruined, rebuilt (1) or fortified (2);
@@ -1944,12 +1952,14 @@ const HUBB={chapel:{w:96,h:80,fx:.18,row:0},gate:{w:88,h:76,fx:.5,row:0},watch:{
 const HUBN={chapel:'Chapel',gate:'Gate',watch:'Watchtower',altar:'Altar of Souls',wall:'Rampart',shop:'Merchant',gamb:'Gambler'};
 const HANG={barbarian:Math.PI,necromancer:Math.PI*1.27,sorceress:Math.PI*1.73,rogue:0};
 const HUB={G:null,heroes:{},hp:{},rects:{},fl:[],dark:new Map()};
-let hubSel={t:'hero'};
+let hubSel={t:'none'};
 function hubInfo(){
-  const nm=$('hubName'),tx=$('hubTxt'),pb=$('playB'),tb=$('townBuy');
+  const nm=$('hubName'),tx=$('hubTxt'),pb=$('playB'),tb=$('townBuy'),P=$('hubPanel'),shut=hubSel.t==='none';
+  P.classList.toggle('shut',shut);P.inert=shut;if(shut)return;
+  $('best').hidden=hubSel.t==='b';
   if(hubSel.t==='b'){const k=hubSel.k,b=TOWN.find(x=>x.k===k),r=townRaw(k),hurt=townHurt(k),st=hurt?'Burning':['In ruins','Rebuilt','Fortified'][r];
     nm.textContent=b.n;tx.textContent=`${st}. ${b.fx}.${hurt?' The horde set it alight: one level of its bonus is lost until you repair it.':''}`;
-    pb.hidden=true;tb.hidden=false;$('modeBtns').hidden=true;$('gearB').hidden=true;
+    pb.hidden=true;tb.hidden=false;$('modeBtns').hidden=true;
     if(hurt){const c=repairCost(r);tb.innerHTML=`Repair · <span class="soul"></span>${c}`;tb.disabled=save.souls<c}
     else if(r>=2){tb.textContent='Fortified';tb.disabled=true}
     else{const c=townCost(r);tb.innerHTML=`${r?'Fortify':'Rebuild'} · <span class="soul"></span>${c}`;tb.disabled=save.souls<c}
@@ -1957,10 +1967,28 @@ function hubInfo(){
   tb.hidden=true;pb.hidden=false;
   const h=HEROES[save.hero],own=!!save.heroes[save.hero];
   if(hubSel.t==='gate'){nm.textContent='The Gate';tx.textContent=`Beyond it, the night and the horde. ${h.name} ${own?'is ready.':'must be unlocked first.'}`}
-  else{nm.textContent=h.name;tx.textContent=`${h.perk}. Tap a building to visit it.`}
+  else{nm.textContent=h.name;tx.textContent=`${h.perk}.${own?' Their gear is in the chest by the fire.':''}`}
   if(own){pb.textContent='Descend';pb.disabled=false}else{pb.textContent=`Unlock · ${h.cost} souls`;pb.disabled=save.souls<h.cost}
-  $('modeBtns').hidden=!own;$('gearB').hidden=!own;syncMode();
+  $('modeBtns').hidden=!own;syncMode();
 }
+function hubClose(){if(hubSel.t==='none')return;hubSel={t:'none'};hubInfo()}
+$('hubX').onclick=()=>{auInit();sfx.tick();hubClose()};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&state==='menu')hubClose()});
+/* S27 (R29): the gear chest by the fire opens the hero's gear and bag (the Gambler's page without the gambling) */
+let gambStash=false;
+function chestSpot(G){const a=Math.PI*.3;return{x:G.cx+Math.cos(a)*G.rx*.92,y:G.fy+Math.sin(a)*G.ry*.92}}
+function drawChest(x,y,s,t,sel){
+  ctx.globalCompositeOperation='lighter';drawGlow('gold',x,y-12*s,(sel?46:34)*s,.28+Math.sin(t*2.2)*.06);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=.8;
+  ctx.drawImage(SHADOW,x-20*s,y-4*s,40*s,9*s);ctx.globalAlpha=1;
+  const w=30*s,h=15*s,L=x-w/2,T=y-h;
+  ctx.fillStyle='#4a2e1a';ctx.fillRect(L,T,w,h);
+  ctx.fillStyle='#5e3b22';ctx.beginPath();ctx.moveTo(L,T);ctx.lineTo(L,T-5*s);ctx.quadraticCurveTo(x,T-13*s,L+w,T-5*s);ctx.lineTo(L+w,T);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#1c120b';ctx.lineWidth=1.2*s;ctx.beginPath();ctx.moveTo(L,T);ctx.lineTo(L+w,T);ctx.stroke();
+  ctx.fillStyle='#8a6a3a';for(const f of[.18,.82]){ctx.fillRect(L+w*f-1.6*s,T-8*s,3.2*s,h+8*s)}
+  ctx.fillStyle='#d9b062';ctx.fillRect(x-3*s,T-3*s,6*s,7*s);ctx.fillStyle='#2a1a10';ctx.fillRect(x-.8*s,T,1.6*s,2.4*s);
+  if(sel){ctx.strokeStyle='rgba(255,210,122,.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+1,w*.75,w*.22,0,0,TAU);ctx.stroke()}
+}
+function openChest(){gambStash=true;buildGamb();setState('gamb')}
 function syncMode(){const m=MODES[SET.mode]?SET.mode:'short';for(const b of $('modeBtns').children){const on=b.dataset.m===m;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}}
 $('modeBtns').onclick=e=>{const b=e.target.closest('button');if(!b)return;auInit();SET.mode=b.dataset.m;saveSet();syncMode()};
 function hubGeom(){const r=$('hubSpace').getBoundingClientRect(),s=clamp(Math.min(r.width/440,r.height/340),.6,1.15);
@@ -2063,6 +2091,8 @@ function renderHub(dt){
   /* the fire pit: stones and logs (sorted with the heroes), flames after the darkness */
   items.push({y:G.fy+2,draw:()=>{ctx.fillStyle='#1a0f0a';ctx.save();ctx.translate(G.cx,G.fy);ctx.rotate(.35);ctx.fillRect(-16*s,-3*s,32*s,6*s);ctx.rotate(-.7);ctx.fillRect(-16*s,-3*s,32*s,6*s);ctx.restore();
     for(let i=0;i<12;i++){const a=i/12*TAU;ctx.fillStyle=i%2?'#4a3d36':'#3a2f2a';ctx.beginPath();ctx.ellipse(G.cx+Math.cos(a)*24*s,G.fy+Math.sin(a)*9*s,5*s,3.4*s,0,0,TAU);ctx.fill()}}});
+  {const c=chestSpot(G),cs=s*1.3;HUB.rects.chest={x0:c.x-24*cs,x1:c.x+24*cs,y0:c.y-30*cs,y1:c.y+18*cs};
+    items.push({y:c.y,draw:()=>{drawChest(c.x,c.y,cs,t,false)},label:{x:c.x,y:c.y+11*s,txt:'Gear chest',col:'#e6d6b8',sel:false}})}
   items.sort((a,b)=>a.y-b.y);for(const it of items)it.draw();
   /* night closes in; the fire pushes it back */
   const fl=1+Math.sin(t*6)*.03+Math.sin(t*15)*.02,dk=ctx.createRadialGradient(G.cx,G.fy-10*s,G.rx*.55*fl,G.cx,G.fy,Math.hypot(W,H)*.62);dk.addColorStop(0,'rgba(3,1,1,0)');dk.addColorStop(.32,'rgba(3,1,1,.55)');dk.addColorStop(1,'rgba(3,1,1,.86)');ctx.fillStyle=dk;ctx.fillRect(0,0,W,H);
@@ -2075,13 +2105,20 @@ function renderHub(dt){
   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
   for(const it of items)if(it.label)hubLabel(it.label.x,it.label.y,it.label.txt,it.label.col,it.label.sel,s);
   for(const id in HUB.hp){const L=HUB.hp[id].label;if(L)hubLabel(L.x,L.y,L.txt,L.col,L.sel,s)}
+  /* S27 (R29): until the first night, a bobbing note shows where the night starts */
+  if(!save.best.time&&hubSel.t==='none'&&HUB.rects.gate){const r=HUB.rects.gate,x=(r.x0+r.x1)/2,y=r.y0-4+Math.sin(t*4)*4,txt='Tap the Gate to descend';
+    ctx.font=`700 ${Math.round(13*Math.max(.95,s))}px Spectral,Georgia,serif`;ctx.textAlign='center';ctx.textBaseline='middle';const w=ctx.measureText(txt).width+22,h=24;
+    ctx.fillStyle='#ffd9a8';ctx.beginPath();ctx.roundRect?ctx.roundRect(x-w/2,y-h,w,h,12):ctx.rect(x-w/2,y-h,w,h);ctx.fill();
+    ctx.beginPath();ctx.moveTo(x-6,y);ctx.lineTo(x+6,y);ctx.lineTo(x,y+6);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#2a160b';ctx.fillText(txt,x,y-h/2+.5)}
   drawAtmos(dt,0,0);ctx.drawImage(VIG,0,0,W,H);
 }
 $('hubSpace').addEventListener('click',e=>{auInit();const x=e.clientX,y=e.clientY,G=HUB.G;if(!G)return;
+  {const r=HUB.rects.chest;if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();hubClose();openChest();return}}
   let best=null,bd=1e9;for(const id in HUB.hp){const p=HUB.hp[id],d=Math.hypot(x-p.x,(y-p.cy)*.75);if(d<40*G.s+6&&d<bd){bd=d;best=id}}
   if(best){save.hero=best;persist();sfx.tick();hubSel={t:'hero'};buildMenu();return}
-  for(const k of['gamb','wall','altar','shop','chapel','gate','watch']){const r=HUB.rects[k];if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();if(k==='altar'){altarHero=null;buildAltar();setState('altar');return}if(k==='shop'){buildShop();setState('shop');return}if(k==='gamb'){buildGamb();setState('gamb');return}hubSel=k==='gate'?{t:'gate'}:{t:'b',k};hubInfo();return}}
-  hubSel={t:'hero'};hubInfo()});
+  for(const k of['gamb','wall','altar','shop','chapel','gate','watch']){const r=HUB.rects[k];if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();if(k==='altar'){altarHero=null;buildAltar();setState('altar');return}if(k==='shop'){buildShop();setState('shop');return}if(k==='gamb'){gambStash=false;buildGamb();setState('gamb');return}hubSel=k==='gate'?{t:'gate'}:{t:'b',k};hubInfo();return}}
+  hubClose()});
 $('townBuy').onclick=()=>{if(hubSel.t!=='b')return;const k=hubSel.k,r=townRaw(k);auInit();
   if(townHurt(k)){const c=repairCost(r);if(save.souls<c)return;save.souls-=c;delete save.dmg[k]}
   else{if(r>=2)return;const c=townCost(r);if(save.souls<c)return;save.souls-=c;save.town=save.town||{};save.town[k]=r+1}
@@ -2112,7 +2149,7 @@ function buildAltar(){
     row.querySelector('button').onclick=()=>{if(max||save.souls<cost)return;auInit();save.souls-=cost;save.meta[k]=l+1;persist();sfx.chest();buildAltar()};
     list.appendChild(row)}
 }
-$('playB').onclick=()=>{auInit();const id=save.hero,h=HEROES[id];if(!save.heroes[id]){if(save.souls>=h.cost){save.souls-=h.cost;save.heroes[id]=true;persist();sfx.chest();buildMenu()}return}newRun(id,SET.mode)};
+$('playB').onclick=()=>{auInit();const id=save.hero,h=HEROES[id];if(!save.heroes[id]){if(save.souls>=h.cost){save.souls-=h.cost;save.heroes[id]=true;persist();sfx.chest();buildMenu()}return}hubClose();newRun(id,SET.mode)};
 $('altarBack').onclick=()=>{buildMenu();setState('menu')};
 /* S24 (R26): the Merchant's page: your belt on top, his wares below; a bought item goes into the first empty slot */
 function buildShop(){
@@ -2149,10 +2186,11 @@ function gWear(it,h){const g=gearOf(h),old=g[it.s],bg=bag(),i=bg.indexOf(it);if(
 function gGamble(h,s,min,c){if(c)save.cache.shift();else save.souls-=GAMBLE_COST;save.pend=gRoll(h,s,min);persist();sfx.chest();if(save.pend.t>=3)sfx.level();buildGamb()}
 function buildGamb(){
   const h=save.hero,own=!!save.heroes[h],g=gearOf(h),bg=bag(),busy=!!save.pend;$('purse4').textContent=save.souls;$('gearH').textContent=`${HEROES[h].name}'s gear`;
+  $('gambT').textContent=gambStash?'Gear Chest':'The Gambler';for(const id of['gambQ','gambH','gambList','gambNote'])$(id).hidden=gambStash;
   const gl=$('gearList');gl.innerHTML='';
   for(const s of GSLOTS){const it=g[s];
     if(it)gRow(gl,gearIcon(it,44),gName(it),`${GSLOTN[s]} · ${GTIER[it.t].n}`,GTIER[it.t].col,gLineEls(it),[gBtn('Take off','alt',bg.length<BAG_MAX,()=>{g[s]=null;bg.push(it);persist();sfx.tick();buildGamb()},bg.length<BAG_MAX?'':'Your bag is full')]);
-    else gRow(gl,icon('g_'+s,44),'Nothing worn',GSLOTN[s],'',gP(`Gamble for ${GA[s]} below.`),null,true)}
+    else gRow(gl,icon('g_'+s,44),'Nothing worn',GSLOTN[s],'',gP(gambStash?`The Gambler in town sells ${GA[s]}.`:`Gamble for ${GA[s]} below.`),null,true)}
   const cl=$('gambList');cl.innerHTML='';const cs=Array.isArray(save.cache)?save.cache:[];
   if(cs.length){const c=cs[0];gRow(cl,icon('cache',44),"Ash Lord's Cache",cs.length>1?`${cs.length} sealed`:'sealed','#ffd27a',gP(`A sealed piece for the ${HEROES[c.h].name}, ${GTIER[c.min].n} or better. The Gambler opens it for free.`),[gBtn('Open','',!busy,()=>gGamble(c.h,pick(GSLOTS),c.min,1))])}
   for(const s of GSLOTS)gRow(cl,icon('g_'+s,44),`Gamble ${GA[s]}`,'','',gP(`A sealed ${s==='armour'?'piece of armour':s} for the ${HEROES[h].name}.`),[gBtn(`<span class="soul"></span>${GAMBLE_COST}`,'',own&&!busy&&save.souls>=GAMBLE_COST,()=>gGamble(h,s))]);
@@ -2180,7 +2218,6 @@ $('gmWear').onclick=()=>{const it=save.pend;if(!it||$('gmWear').disabled)return;
 $('gmKeep').onclick=()=>{const it=save.pend;if(!it||bag().length>=BAG_MAX)return;auInit();bag().push(it);sfx.tick();gDone()};
 $('gmAsh').onclick=()=>{const b=$('gmAsh');if(!save.pend)return;auInit();if(!b.dataset.arm){b.dataset.arm=1;b.textContent=`Sure? · +${ASH_BACK} souls`;return}save.souls+=ASH_BACK;sfx.soul();gDone()};
 $('gambBack').onclick=()=>{buildMenu();setState('menu')};
-$('gearB').onclick=()=>{auInit();sfx.tick();buildGamb();setState('gamb')};
 $('pauseB').onclick=()=>{if(state!=='play')return;const bl=$('buildList');bl.innerHTML='';
   for(const w of run.weapons){const d=document.createElement('div');d.appendChild(icon(w.id,44));d.insertAdjacentHTML('beforeend',`<span>${w.lvl}</span>`);bl.appendChild(d)}
   for(const k in run.passives){const d=document.createElement('div');d.appendChild(icon(k,44));d.insertAdjacentHTML('beforeend',`<span>${run.passives[k]}</span>`);bl.appendChild(d)}
@@ -2188,7 +2225,7 @@ $('pauseB').onclick=()=>{if(state!=='play')return;const bl=$('buildList');bl.inn
 $('resumeB').onclick=()=>{auInit();setState('play')};
 $('quitB').onclick=()=>{run.over=true;showEnd(false)};
 $('againB').onclick=()=>{auInit();newRun(run.hero,run.mode)};
-$('homeB').onclick=()=>{hubSel=run&&run.burned?{t:'b',k:run.burned}:{t:'hero'};run=null;buildMenu();setState('menu')};
+$('homeB').onclick=()=>{hubSel=run&&run.burned?{t:'b',k:run.burned}:{t:'none'};run=null;buildMenu();setState('menu')};
 document.querySelectorAll('.muteB').forEach(b=>b.onclick=e=>{e.stopPropagation();auInit();setMute(!save.muted)});
 /* settings: separate music / effects volume, mute, screen shake (stored on this device only) */
 function syncSet(){for(const[id,k]of[['volM','music'],['volS','sfx']]){const el=$(id),v=Math.round(SET[k]*100);el.value=v;el.style.setProperty('--p',v+'%');$(id+'o').textContent=v}$('shakeT').textContent='Screen shake: '+(SET.shake?'On':'Off');$('goreT').textContent='Blood: '+(SET.gore?'On':'Off');setMute(save.muted,true)}
