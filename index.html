@@ -424,8 +424,9 @@ const T={
 /* S26 (R28): shared skills any hero can pick up; a hero holds at most MAXW attacks */
 const SHARED=['skystrike','stars','ember','saw','needles','golem'],MAXW=6;
 /* S29 (R33) balance knobs: armour floor, Full Night monster damage growth, wrath toughness, Full Night boss, soul and gift sizes */
-/* S30 (R33): lateDmg: from lateFrom seconds on, Full Night monsters gain extra damage, up to +lateDmg at 30:00 (a faster growth from the start made minute 16 a wall) */
-const BAL={armorFloor:.35,fullDmgT:400,lateDmg:.7,lateFrom:1080,wrathHp:.6,wrathDmg:.25,fullBoss:3,fullKillSouls:30,giftDmg:.03,danger30:480};
+/* S30 (R33): lateDmg and lateHp: from lateFrom seconds on, Full Night monsters gain extra damage and health, up to +lateDmg and +lateHp at 30:00 (boss health excluded) (a faster growth from the start made minute 16 a wall) */
+const BAL={armorFloor:.35,fullDmgT:400,lateDmg:1,lateHp:2,lateSpd:0,lateRing:0,ringN:28,lateFrom:1080,wrathHp:.6,wrathDmg:.25,fullBoss:3,fullKillSouls:30,giftDmg:.03,danger30:480,soulMul:.25};
+/* S30 (R33): soulMul scales every night's souls (Fabio: "three nights and you unlock everything seems too quick for me. scale the gains down by 75%") */
 for(const k of['cleave','bonespear','fireball','daggers'])for(const p in T[k])T[k][p][6]=T[k][p][5];
 /* S23 (R24): each hero's own kit: a signature attack, 2 class spells from the start, 2 more bought at the Altar */
 const KITS={
@@ -596,6 +597,8 @@ const runLen=()=>MODES[run.mode].rounds*ROUND_T;
 /* how far the danger has grown: Short Night keeps the old curve, Full Night stretches it over 30 minutes */
 /* S29 (R33): the old Full Night curve flattened in its last 10 minutes; now it follows the old curve to 20:00, then climbs straight to 480 at 30:00 */
 const DANGER20=330*Math.pow(2/3,.75);
+/* S30 (R33): 0 until lateFrom, then climbs to 1 at 30:00 (Full Night only) */
+const lateF=()=>run.mode==='full'?clamp((run.time-BAL.lateFrom)/(1800-BAL.lateFrom),0,1):0;
 const dangerT=()=>{if(run.mode!=='full')return run.time;const t=Math.min(run.time,1800);return t<=1200?330*Math.pow(t/1800,.75):DANGER20+(t-1200)/600*(BAL.danger30-DANGER20)};
 function runEvents(){
   if(run.mode==='short')return EVENTS.map(e=>e.k==='msg'?Object.assign({},e,{t:ROUND_T-12}):e);
@@ -1409,8 +1412,8 @@ function banner(t,sub,boss){const b=$('banner');b.querySelector('b').textContent
 /* ---------- spawning (unchanged rules) ---------- */
 function spawnEnemy(type,x,y){
   /* S29 (R33): in a Full Night monsters hit harder as the night grows (Short Night unchanged), and the horde's wrath makes them tougher too */
-  const d=ETYPES[type],t=dangerT(),wr=d.boss?0:run.wrath||0,hpm=(d.boss?1:d.elite?1+t/150:1+t/75)*(1+BAL.wrathHp*wr),dmm=(1+t/(run.mode==='full'?BAL.fullDmgT:400))*(1+BAL.wrathDmg*wr)*(run.mode==='full'?1+BAL.lateDmg*Math.max(0,Math.min(1,(run.time-BAL.lateFrom)/(1800-BAL.lateFrom))):1);
-  const e={id:nextId++,type,x,y,r:d.r,hp:d.hp*hpm,maxHp:d.hp*hpm,spd:d.spd*(d.boss?1:1+Math.min(.35,t/600)),dmg:d.dmg*dmm,xp:d.xp,mass:d.mass||1,kx:0,ky:0,atk:0,flash:0,lunge:0,hitT:0,la:0,slow:0,seed:rand()*10,face:1,skT:0,shootT:rr(1.2,2.6),elite:!!d.elite,boss:!!d.boss,ghost:!!d.ghost,dead:false,by:0,stepD:0,born:0};
+  const d=ETYPES[type],t=dangerT(),wr=d.boss?0:run.wrath||0,late=lateF(),hpm=(d.boss?1:d.elite?1+t/150:1+t/75)*(1+BAL.wrathHp*wr)*(d.boss?1:1+BAL.lateHp*late),dmm=(1+t/(run.mode==='full'?BAL.fullDmgT:400))*(1+BAL.wrathDmg*wr)*(1+BAL.lateDmg*late);
+  const e={id:nextId++,type,x,y,r:d.r,hp:d.hp*hpm,maxHp:d.hp*hpm,spd:d.spd*(d.boss?1:(1+Math.min(.35,t/600))*(1+BAL.lateSpd*late)),dmg:d.dmg*dmm,xp:d.xp,mass:d.mass||1,kx:0,ky:0,atk:0,flash:0,lunge:0,hitT:0,la:0,slow:0,seed:rand()*10,face:1,skT:0,shootT:rr(1.2,2.6),elite:!!d.elite,boss:!!d.boss,ghost:!!d.ghost,dead:false,by:0,stepD:0,born:0};
   enemies.push(e);return e;
 }
 function spawnType(t){
@@ -1433,7 +1436,9 @@ function spawnUpdate(dt){
   if(!run.boss){if(!run.wrathOn&&wr>.6){run.wrathOn=true;banner('The horde grows wrathful','It has felt your blade')}else if(run.wrathOn&&wr<.25)run.wrathOn=false}
   if(run.spawnT<=0){
     run.spawnT=run.boss?1.3:sp0/(1+.5*wr);
-    if(enemies.length<cap){const n=Math.round(n0*(1+.4*wr)),a=rand()*TAU,type=spawnType(td);for(let i=0;i<n;i++)spawnEnemy(type,P.x+Math.cos(a)*R+rr(-35,35),P.y+Math.sin(a)*R+rr(-35,35))}
+    /* S30 (R33): late in a Full Night more and more packs come as a ring around you, so circling away from the horde stops working */
+    if(enemies.length<cap&&rand()<BAL.lateRing*lateF()){const n=BAL.ringN,a0=rand()*TAU,type=spawnType(td);for(let i=0;i<n;i++){const a=a0+i/n*TAU,d=R*rr(.8,.9);spawnEnemy(type,P.x+Math.cos(a)*d,P.y+Math.sin(a)*d)}}
+    else if(enemies.length<cap){const n=Math.round(n0*(1+.4*wr)),a=rand()*TAU,type=spawnType(td);for(let i=0;i<n;i++)spawnEnemy(type,P.x+Math.cos(a)*R+rr(-35,35),P.y+Math.sin(a)*R+rr(-35,35))}
   }
   /* S22 (R25): rounds; Full Night announces each one */
   const rd=Math.min(M.rounds-1,Math.floor(t/ROUND_T));
@@ -1937,7 +1942,7 @@ function updateHud(){
     else{const r=k==='sorceress'?run.ovT:run.vanT;ok=tm>=r;tx=ok?'Ready':Math.ceil(r-tm)+'s'}
     const v=(ok?1:0)+tx;if(hud.last.set!==v){hud.last.set=v;const si=$('setI');si.classList.toggle('ready',ok);si.lastChild.textContent=tx}}
 }
-function soulsEarned(){const base=run.souls+Math.floor(run.kills/(run.mode==='full'?BAL.fullKillSouls:15))+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(base*(1+.15*meta('greed')+.1*townLv('watch')+(S&&S.souls||0)/100))}}
+function soulsEarned(){const base=run.souls+Math.floor(run.kills/(run.mode==='full'?BAL.fullKillSouls:15))+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(BAL.soulMul*base*(1+.15*meta('greed')+.1*townLv('watch')+(S&&S.souls||0)/100))}}
 function showEnd(win){
   const e=soulsEarned();save.souls+=e.total;save.runs++;save.best.time=Math.max(save.best.time,Math.floor(run.time));save.best.kills=Math.max(save.best.kills,run.kills);if(win)save.best.wins=(save.best.wins||0)+1;
   /* S07: a lost night burns one standing building (its bonus drops a level until repaired) */
@@ -2590,7 +2595,7 @@ if(DEBUG)window.__AH={SPR,CORPSE,GROUND,DEC,DECOR,get fps(){return fpsV},get q()
   jump(t){if(!run)return;run.time=t;while(run.ei<run.elites.length&&run.elites[run.ei].t<t)run.ei++;while(run.ev<run.evs.length&&run.evs[run.ev].t<t)run.ev++},god(){if(S){S.maxHp=99999;P.hp=99999;S.armor=999}},lvl(){if(run)run.pending++},setQ(q){Q=q;QS=QL[q];resize()},hurtMe(f){P.hp=S.maxHp*f},chest(){if(run)drop('chest',P.x+20,P.y)},
   /* S23 test helpers */start(h,m){newRun(h,m||'short')},give(id,l){const w=getW(id);if(w)w.lvl=l;else{addWeapon(id);getW(id).lvl=l}if(id==='skeletons')syncMinions()},pool:()=>offerPool().map(o=>o.id+':'+o.lvl),get save(){return save},get zones(){return zones},get projs(){return projs},altar(){altarHero=null;buildAltar();setState('altar')},
   /* S24 test helpers */shop(){buildShop();setState('shop')},use:i=>useItem(i),get S(){return S},
-  /* S29 test helpers: drive a whole night from a script, faster than real time */sim:{BAL,step:dt=>update(dt),offers:n=>rollOffers(n),apply:o=>applyOffer(o),get state(){return state},set state(v){state=v},input,dangerT:()=>dangerT(),souls:()=>soulsEarned(),get gems(){return gems},kitOf,WEAPONS,PASSIVES,KITS,SHARED,get hitStop(){return hitStop},set hitStop(v){hitStop=v}},
+  /* S29 test helpers: drive a whole night from a script, faster than real time */sim:{BAL,step:dt=>update(dt),offers:n=>rollOffers(n),apply:o=>applyOffer(o),get state(){return state},set state(v){state=v},input,dangerT:()=>dangerT(),souls:()=>soulsEarned(),get gems(){return gems},get eprojs(){return eprojs},HEROES,T,kitOf,WEAPONS,PASSIVES,KITS,SHARED,get hitStop(){return hitStop},set hitStop(v){hitStop=v}},
   /* S25 test helpers */gamb(){buildGamb();setState('gamb')},roll:(h,s,m)=>gRoll(h,s,m),wear(it,h){gWear(it,h||save.hero);persist()},setN:h=>gSetN(h),get minions(){return minions},GLEG,GSET,
     item(h,s,t,o){return Object.assign({u:'t'+((rand()*1e6)|0),h,s,t,x:[]},o||{})}};
 }
