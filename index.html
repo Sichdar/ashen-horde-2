@@ -423,6 +423,9 @@ const T={
 };
 /* S26 (R28): shared skills any hero can pick up; a hero holds at most MAXW attacks */
 const SHARED=['skystrike','stars','ember','saw','needles','golem'],MAXW=6;
+/* S29 (R33) balance knobs: armour floor, Full Night monster damage growth, wrath toughness, Full Night boss, soul and gift sizes */
+/* S30 (R33): lateDmg: from lateFrom seconds on, Full Night monsters gain extra damage, up to +lateDmg at 30:00 (a faster growth from the start made minute 16 a wall) */
+const BAL={armorFloor:.35,fullDmgT:400,lateDmg:.7,lateFrom:1080,wrathHp:.6,wrathDmg:.25,fullBoss:3,fullKillSouls:30,giftDmg:.03,danger30:480};
 for(const k of['cleave','bonespear','fireball','daggers'])for(const p in T[k])T[k][p][6]=T[k][p][5];
 /* S23 (R24): each hero's own kit: a signature attack, 2 class spells from the start, 2 more bought at the Altar */
 const KITS={
@@ -591,7 +594,9 @@ const MODES={short:{name:'Short Night',rounds:1,win:120},full:{name:'Full Night'
 const ROUNDS=[{n:'The restless dead',e:'ghoul'},{n:'The Fallen join them',e:'imp'},{n:'Wings in the dark',e:'bat'},{n:'Bone archers take aim',e:'archer'},{n:'Wraiths rise from the ash',e:'wraith'},{n:'The whole horde',e:null}];
 const runLen=()=>MODES[run.mode].rounds*ROUND_T;
 /* how far the danger has grown: Short Night keeps the old curve, Full Night stretches it over 30 minutes */
-const dangerT=()=>run.mode==='full'?330*Math.pow(Math.min(run.time,1800)/1800,.75):run.time;
+/* S29 (R33): the old Full Night curve flattened in its last 10 minutes; now it follows the old curve to 20:00, then climbs straight to 480 at 30:00 */
+const DANGER20=330*Math.pow(2/3,.75);
+const dangerT=()=>{if(run.mode!=='full')return run.time;const t=Math.min(run.time,1800);return t<=1200?330*Math.pow(t/1800,.75):DANGER20+(t-1200)/600*(BAL.danger30-DANGER20)};
 function runEvents(){
   if(run.mode==='short')return EVENTS.map(e=>e.k==='msg'?Object.assign({},e,{t:ROUND_T-12}):e);
   const ev=[];
@@ -1359,7 +1364,7 @@ function recalc(){
   S={maxHp:h.hp*(1+.08*meta('vitality')+.12*townLv('wall')),speed:h.speed,armor:h.armor,dmgMul:1+.06*meta('might'),cdMul:(h.cd||1)*Math.pow(.96,meta('haste')),area:1,magnet:70*(1+.15*meta('magnet')),regen:0,crit:h.crit||0,dur:1,proj:0};
   gearStats(S,run.hero);/* S25 (R27): the hero's gear */
   for(const k in run.passives)for(let i=0;i<run.passives[k];i++)PASSIVES[k].a(S);
-  S.dmgMul*=1+.03*(run.xd||0);S.maxHp+=5*(run.xl||0);/* S26 (R28): the endless bonuses */
+  S.dmgMul*=1+BAL.giftDmg*(run.xd||0);S.maxHp+=5*(run.xl||0);/* S26 (R28): the endless bonuses */
   if(run.charm)S.magnet*=1.6;/* S24 (R26): Soul Charm */
   if(old&&S.maxHp>old)P.hp+=S.maxHp-old;
   P.hp=Math.min(P.hp,S.maxHp);
@@ -1403,8 +1408,9 @@ function banner(t,sub,boss){const b=$('banner');b.querySelector('b').textContent
 
 /* ---------- spawning (unchanged rules) ---------- */
 function spawnEnemy(type,x,y){
-  const d=ETYPES[type],t=dangerT(),hpm=d.boss?1:d.elite?1+t/150:1+t/75;
-  const e={id:nextId++,type,x,y,r:d.r,hp:d.hp*hpm,maxHp:d.hp*hpm,spd:d.spd*(d.boss?1:1+Math.min(.35,t/600)),dmg:d.dmg*(1+t/400),xp:d.xp,mass:d.mass||1,kx:0,ky:0,atk:0,flash:0,lunge:0,hitT:0,la:0,slow:0,seed:rand()*10,face:1,skT:0,shootT:rr(1.2,2.6),elite:!!d.elite,boss:!!d.boss,ghost:!!d.ghost,dead:false,by:0,stepD:0,born:0};
+  /* S29 (R33): in a Full Night monsters hit harder as the night grows (Short Night unchanged), and the horde's wrath makes them tougher too */
+  const d=ETYPES[type],t=dangerT(),wr=d.boss?0:run.wrath||0,hpm=(d.boss?1:d.elite?1+t/150:1+t/75)*(1+BAL.wrathHp*wr),dmm=(1+t/(run.mode==='full'?BAL.fullDmgT:400))*(1+BAL.wrathDmg*wr)*(run.mode==='full'?1+BAL.lateDmg*Math.max(0,Math.min(1,(run.time-BAL.lateFrom)/(1800-BAL.lateFrom))):1);
+  const e={id:nextId++,type,x,y,r:d.r,hp:d.hp*hpm,maxHp:d.hp*hpm,spd:d.spd*(d.boss?1:1+Math.min(.35,t/600)),dmg:d.dmg*dmm,xp:d.xp,mass:d.mass||1,kx:0,ky:0,atk:0,flash:0,lunge:0,hitT:0,la:0,slow:0,seed:rand()*10,face:1,skT:0,shootT:rr(1.2,2.6),elite:!!d.elite,boss:!!d.boss,ghost:!!d.ghost,dead:false,by:0,stepD:0,born:0};
   enemies.push(e);return e;
 }
 function spawnType(t){
@@ -1456,7 +1462,7 @@ function spawnUpdate(dt){
   }
   if(t>=len&&!run.bossSpawned){
     run.bossSpawned=true;const a=-Math.PI/2;run.boss=spawnEnemy('boss',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R);
-    if(run.mode==='full'){run.boss.hp*=1.6;run.boss.maxHp*=1.6}
+    if(run.mode==='full'){run.boss.hp*=BAL.fullBoss;run.boss.maxHp*=BAL.fullBoss}
     Object.assign(run.boss,{mode:'walk',modeT:0,tAtk:2.5,ring2:0,born:2.2});
     /* dramatic entrance: portal, letterbox, darkness swells, roar */
     run.cine=3.4;run.roarT=.9;effects.push({k:'portal',x:run.boss.x,y:run.boss.y,life:2.6,max:2.6});addDecal('scorch',run.boss.x,run.boss.y+20,160,60);
@@ -1527,7 +1533,7 @@ function kill(e,quiet){
 }
 function damagePlayer(d){
   if(run.over||run.won||P.inv>0||P.safe>0)return;
-  let dd=Math.max(1,d-S.armor);
+  let dd=Math.max(1,d*BAL.armorFloor,d-S.armor);/* S29 (R33): armour can't take away more than 65% of a hit */
   /* S25 (R27): Bone Armour soaks the blow first; it grows back 10 seconds after it breaks */
   if(run.bone>0){const a=Math.min(run.bone,dd);run.bone-=a;dd-=a;burst(P.x,P.y-6,6,'230,220,200',90,.4,2,false);
     if(run.bone<=0){run.bone=0;run.boneT=run.time+10;sfx.bonecast();burst(P.x,P.y-6,18,'230,220,200',140,.6,2.4,false)}
@@ -1872,7 +1878,9 @@ function offerPool(){
   const pool=[];
   /* S23 (R24): only the hero's own attacks; the signature attack reaches level 6 once its Mastery is bought */
   /* S26 (R28): plus the shared skills; a new attack only while fewer than MAXW are held */
-  for(const id in WEAPONS){const sh=SHARED.includes(id);if(!sh&&!kitHas(run.hero,id))continue;const w=getW(id);if(w){if(w.lvl<maxLvl(id))pool.push({kind:'w',id,lvl:w.lvl+1,wt:w.lvl===5?2:1.5})}else if(run.weapons.length<MAXW)pool.push({kind:'w',id,lvl:1,wt:sh?.5:.9})}
+  /* S29 (R33): class spells bought at the Altar come first (weight 3) and a shared skill never takes a slot one of them still needs */
+  const bought=KITS[run.hero]?kitOf(run.hero).u.filter(id=>!getW(id)):[],free=MAXW-run.weapons.length;
+  for(const id in WEAPONS){const sh=SHARED.includes(id);if(!sh&&!kitHas(run.hero,id))continue;const w=getW(id);if(w){if(w.lvl<maxLvl(id))pool.push({kind:'w',id,lvl:w.lvl+1,wt:w.lvl===5?2:1.5})}else if(free>0&&!(sh&&free<=bought.length))pool.push({kind:'w',id,lvl:1,wt:sh?.5:bought.includes(id)?3:.9})}
   for(const id in PASSIVES){const l=run.passives[id]||0;if(l<(PASSIVES[id].max||5))pool.push({kind:'p',id,lvl:l+1,wt:.75})}
   return pool;
 }
@@ -1929,7 +1937,7 @@ function updateHud(){
     else{const r=k==='sorceress'?run.ovT:run.vanT;ok=tm>=r;tx=ok?'Ready':Math.ceil(r-tm)+'s'}
     const v=(ok?1:0)+tx;if(hud.last.set!==v){hud.last.set=v;const si=$('setI');si.classList.toggle('ready',ok);si.lastChild.textContent=tx}}
 }
-function soulsEarned(){const base=run.souls+Math.floor(run.kills/15)+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(base*(1+.15*meta('greed')+.1*townLv('watch')+(S&&S.souls||0)/100))}}
+function soulsEarned(){const base=run.souls+Math.floor(run.kills/(run.mode==='full'?BAL.fullKillSouls:15))+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(base*(1+.15*meta('greed')+.1*townLv('watch')+(S&&S.souls||0)/100))}}
 function showEnd(win){
   const e=soulsEarned();save.souls+=e.total;save.runs++;save.best.time=Math.max(save.best.time,Math.floor(run.time));save.best.kills=Math.max(save.best.kills,run.kills);if(win)save.best.wins=(save.best.wins||0)+1;
   /* S07: a lost night burns one standing building (its bonus drops a level until repaired) */
@@ -1999,7 +2007,7 @@ function drawChest(x,y,s,t,sel){
   ctx.fillStyle='#d9b062';ctx.fillRect(x-3*s,T-3*s,6*s,7*s);ctx.fillStyle='#2a1a10';ctx.fillRect(x-.8*s,T,1.6*s,2.4*s);
   if(sel){ctx.strokeStyle='rgba(255,210,122,.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+1,w*.75,w*.22,0,0,TAU);ctx.stroke()}
 }
-function openChest(){gambStash=true;buildGamb();setState('gamb')}
+function openStash(){/* S29 (R33): renamed; it shared a name with the night's treasure chest, so chests opened the stash */gambStash=true;buildGamb();setState('gamb')}
 /* S28 (S5): the Full Night opens after the first win (or for a player who already chose it); until then every night is a Short Night.
    It carries a "New" tag until it is picked once. */
 const fullOpen=()=>(save.best.wins||0)>0||SET.mode==='full';
@@ -2139,7 +2147,7 @@ function renderHub(dt){
     ctx.fillStyle='#2a160b';ctx.fillText(txt,x,y-h/2+.5)}
 }
 $('hubSpace').addEventListener('click',e=>{auInit();const x=e.clientX,y=e.clientY,G=HUB.G;if(!G)return;
-  {const r=HUB.rects.chest;if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();hubClose();openChest();return}}
+  {const r=HUB.rects.chest;if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();hubClose();openStash();return}}
   let best=null,bd=1e9;for(const id in HUB.hp){const p=HUB.hp[id],d=Math.hypot(x-p.x,(y-p.cy)*.75);if(d<40*G.s+6&&d<bd){bd=d;best=id}}
   if(best){save.hero=best;persist();sfx.tick();hubSel={t:'hero'};buildMenu();return}
   for(const k of['gamb','wall','altar','shop','chapel','gate','watch']){const r=HUB.rects[k];if(r&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){sfx.tick();if(k==='altar'){altarHero=null;buildAltar();setState('altar');return}if(k==='shop'){buildShop();setState('shop');return}if(k==='gamb'){gambStash=false;buildGamb();setState('gamb');return}hubSel=k==='gate'?{t:'gate'}:{t:'b',k};hubInfo();return}}
@@ -2582,6 +2590,7 @@ if(DEBUG)window.__AH={SPR,CORPSE,GROUND,DEC,DECOR,get fps(){return fpsV},get q()
   jump(t){if(!run)return;run.time=t;while(run.ei<run.elites.length&&run.elites[run.ei].t<t)run.ei++;while(run.ev<run.evs.length&&run.evs[run.ev].t<t)run.ev++},god(){if(S){S.maxHp=99999;P.hp=99999;S.armor=999}},lvl(){if(run)run.pending++},setQ(q){Q=q;QS=QL[q];resize()},hurtMe(f){P.hp=S.maxHp*f},chest(){if(run)drop('chest',P.x+20,P.y)},
   /* S23 test helpers */start(h,m){newRun(h,m||'short')},give(id,l){const w=getW(id);if(w)w.lvl=l;else{addWeapon(id);getW(id).lvl=l}if(id==='skeletons')syncMinions()},pool:()=>offerPool().map(o=>o.id+':'+o.lvl),get save(){return save},get zones(){return zones},get projs(){return projs},altar(){altarHero=null;buildAltar();setState('altar')},
   /* S24 test helpers */shop(){buildShop();setState('shop')},use:i=>useItem(i),get S(){return S},
+  /* S29 test helpers: drive a whole night from a script, faster than real time */sim:{BAL,step:dt=>update(dt),offers:n=>rollOffers(n),apply:o=>applyOffer(o),get state(){return state},set state(v){state=v},input,dangerT:()=>dangerT(),souls:()=>soulsEarned(),get gems(){return gems},kitOf,WEAPONS,PASSIVES,KITS,SHARED,get hitStop(){return hitStop},set hitStop(v){hitStop=v}},
   /* S25 test helpers */gamb(){buildGamb();setState('gamb')},roll:(h,s,m)=>gRoll(h,s,m),wear(it,h){gWear(it,h||save.hero);persist()},setN:h=>gSetN(h),get minions(){return minions},GLEG,GSET,
     item(h,s,t,o){return Object.assign({u:'t'+((rand()*1e6)|0),h,s,t,x:[]},o||{})}};
 }
