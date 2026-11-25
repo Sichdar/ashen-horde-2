@@ -198,6 +198,8 @@ input[type=range]::-moz-range-track{height:8px;background:#1a110c;border:1px sol
 input[type=range]::-moz-range-progress{height:8px;background:#c2351f}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;background:#c99a3e;border:2px solid #1a0d05}
 .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pt{display:flex;flex-direction:column;gap:8px;align-items:center;padding-top:10px;border-top:1px solid var(--line);width:100%}.pt>b{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#d8b46a}#ptMsg:empty{display:none}
+.ghost.danger{color:#e59a86;border-color:#6a2a1e}.ghost.danger.arm{color:#fff;background:linear-gradient(180deg,#8a1e14,#4a0a06);border-color:#e0573f}
 @media (prefers-reduced-motion:reduce){#banner.go,#banner.boss.go{animation-duration:2.8s;animation-name:fade}.card,.box{animation:none}@keyframes fade{0%,100%{opacity:0}10%,80%{opacity:1}}}
 </style>
 </head>
@@ -313,6 +315,10 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <label class="sl"><span>Effects</span><input type="range" id="volS" min="0" max="100" step="1"><output id="volSo">85</output></label>
   <div class="toggles"><button id="muteT" class="ghost">Sound: On</button><button id="shakeT" class="ghost">Screen shake: On</button><button id="goreT" class="ghost">Blood: On</button></div>
   <p id="sync" class="note"></p>
+  <div class="pt"><b>Play-test results</b><p id="ptN" class="note"></p>
+    <div class="toggles"><button id="ptDl" class="ghost">Download results</button><button id="ptCp" class="ghost">Copy results</button></div>
+    <p id="ptMsg" class="note" aria-live="polite"></p></div>
+  <button id="resetB" class="ghost danger">Reset progress</button>
   <button id="setBack" class="big">Done</button>
 </div></div>
 
@@ -1466,7 +1472,7 @@ function spawnUpdate(dt){
     if(!o.open)banner(o.n>1?'Pit Overseers approach':'A Pit Overseer approaches','Slay it for a Hellforged Chest');sfx.growl('brute',1);
   }
   if(t>=len&&!run.bossSpawned){
-    run.bossSpawned=true;const a=-Math.PI/2;run.boss=spawnEnemy('boss',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R);
+    run.bossSpawned=true;ptNote('bossArrived');const a=-Math.PI/2;run.boss=spawnEnemy('boss',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R);
     if(run.mode==='full'){run.boss.hp*=BAL.fullBoss;run.boss.maxHp*=BAL.fullBoss}
     Object.assign(run.boss,{mode:'walk',modeT:0,tAtk:2.5,ring2:0,born:2.2});
     /* dramatic entrance: portal, letterbox, darkness swells, roar */
@@ -1526,7 +1532,7 @@ function kill(e,quiet){
   const cbw=!quiet&&!e.boss&&getW('corpseburst');if(cbw&&run.cb.length<8&&rand()<T.corpseburst.ch[cbw.lvl])run.cb.push({x:e.x,y:e.y,t:.14,L:cbw.lvl});
   if(e.elite){if(!run.won)drop('chest',e.x,e.y);for(let i=0;i<5;i++)drop('soul',e.x,e.y);drop('heal',e.x,e.y);run.shake=Math.max(run.shake,7);sfx.boom();sfx.die('brute');stop(.09);effects.push({k:'boom',x:e.x,y:e.y,R:70,life:.4,max:.4});addDecal('scorch',e.x,e.y+10,90,40)}
   if(e.boss){
-    run.won=true;run.endT=3.4;run.boss=null;$('bossbar').style.display='none';
+    run.won=true;ptNote('bossKilled');run.endT=3.4;run.boss=null;$('bossbar').style.display='none';
     /* S25 (R27): the Ash Lord's Cache, one sealed piece the Gambler opens in town (Full Night: Rare or better) */
     if(!run.cacheD){run.cacheD=1;if(!Array.isArray(save.cache))save.cache=[];save.cache.push({min:run.mode==='full'?2:1,h:run.hero})}
     for(let i=0;i<40;i++)drop('soul',e.x+rr(-40,40),e.y+rr(-40,40));
@@ -1543,7 +1549,7 @@ function damagePlayer(d){
   if(run.bone>0){const a=Math.min(run.bone,dd);run.bone-=a;dd-=a;burst(P.x,P.y-6,6,'230,220,200',90,.4,2,false);
     if(run.bone<=0){run.bone=0;run.boneT=run.time+10;sfx.bonecast();burst(P.x,P.y-6,18,'230,220,200',140,.6,2.4,false)}
     if(dd<=0)return}
-  P.hp-=dd;run.hurt=.35;run.shake=Math.max(run.shake,3);sfx.hurt();if(dd>=12)stop(.05);
+  P.hp-=dd;ptHit(dd);run.hurt=.35;run.shake=Math.max(run.shake,3);sfx.hurt();if(dd>=12)stop(.05);
   texts.push({x:P.x,y:P.y-22,v:Math.round(dd),life:.7,max:.7,col:'#ff5a4a'});
   if(SET.gore){const n=dd>=10?10:5;for(let i=0;i<n;i++)drop1(P.x,P.y-4,10,rand()*TAU,rr(40,130),GORE.hero,rr(.4,.8),rr(1.2,2.4));addDecal('bloodD',P.x+rr(-6,6),P.y+10+rr(-3,3),rr(7,11),25)}
   else burst(P.x,P.y-6,6,'#8a0f08',80,.4,2,false);
@@ -1551,7 +1557,7 @@ function damagePlayer(d){
   if(P.hp>0&&run.leg.winter&&run.time>=run.wint){run.wint=run.time+3;const w=getW('frostnova');novaCast(w?w.lvl:1)}
   if(P.hp>0&&run.set3==='rogue'&&run.time>=run.vanT){run.vanT=run.time+6;P.inv=Math.max(P.inv,1);run.sure=3;burst(P.x,P.y-6,20,'154,125,255',90,.6,2.2,true,-1);sfx.throw()}
   if(P.hp<=0){
-    if(run.revives>0){run.revives--;P.hp=S.maxHp*.5;P.inv=2.2;banner('Undying','Death rejects you');sfx.roar();run.shake=14;flashA=.7;flashC='255,230,170';
+    if(run.revives>0){run.revives--;ptNote('revive');P.hp=S.maxHp*.5;P.inv=2.2;banner('Undying','Death rejects you');sfx.roar();run.shake=14;flashA=.7;flashC='255,230,170';
       forNear(P.x,P.y,320,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,e.boss?400:250,Math.cos(a)*600,Math.sin(a)*600,true)});
       effects.push({k:'nova',x:P.x,y:P.y,R:320,life:.5,max:.5,col:'255,200,120'});
     }else{P.hp=0;run.over=true;run.endT=1.9;gore({type:'hero',x:P.x,y:P.y,r:14,elite:1},true,rand()*TAU);burst(P.x,P.y,30,'255,120,40',120,1,2.5,true,-1);sfx.die_hero();run.shake=10;stop(.25)}
@@ -1701,7 +1707,7 @@ function updateMinions(dt){
 /* ---------- update ---------- */
 function update(dt){
   if(!run.won&&!run.over)run.time+=dt;
-  menuT+=dt;
+  menuT+=dt;ptTick();
   if(run.hint>0)run.hint-=dt;
   if(run.cine>0)run.cine-=dt;
   if(run.roarT>0){run.roarT-=dt;if(run.roarT<=0){sfx.roar();run.shake=14;stop(.12)}}
@@ -1859,7 +1865,7 @@ function collect(g){
 /* S24 (R26): the belt. Tap a slot (or keys 1-3) to use what the Merchant sold you; it is gone once used. */
 function useItem(i){
   if(state!=='play'||!run||run.over||run.won)return;const b=belt(),id=b[i];if(!id||!WARES[id])return;
-  b[i]=null;persist();syncBelt();
+  b[i]=null;persist();syncBelt();ptNote('item',WARES[id].name||id);
   if(id==='draught'){const h=Math.round(S.maxHp*.4);P.hp=Math.min(S.maxHp,P.hp+h);texts.push({x:P.x,y:P.y-24,v:'+'+h,life:1,max:1,col:'#7dff8a'});sfx.heal();burst(P.x,P.y,22,'255,80,80',90,.7,2.2,true,-1)}
   else if(id==='bomb'){const R=240,dmg=90*(1+dangerT()/90)*S.dmgMul;curW='fire';
     forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,dmg,Math.cos(a)*520,Math.sin(a)*520,true)});
@@ -1914,7 +1920,7 @@ function cardHtml(o,el){const f=offerInfo(o);el.className='card';el.innerHTML=`<
 function openLevelUp(){
   setState('levelup');$('lvN').textContent=run.level-run.pending+1;
   const offers=rollOffers(3),box=$('cards');box.innerHTML='';box.classList.add('wait');
-  for(const o of offers){const b=document.createElement('button');cardHtml(o,b);b.onclick=()=>{auInit();applyOffer(o);run.pending--;burst(P.x,P.y,24,'216,165,67',160,.6,2.5,true);sfx.tick();if(run.pending>0)openLevelUp();else setState('play')};box.appendChild(b)}
+  for(const o of offers){const b=document.createElement('button');cardHtml(o,b);b.onclick=()=>{auInit();{const f=offerInfo(o);ptNote('pick',f.name+' ('+f.tag+')')}applyOffer(o);run.pending--;burst(P.x,P.y,24,'216,165,67',160,.6,2.5,true);sfx.tick();if(run.pending>0)openLevelUp();else setState('play')};box.appendChild(b)}
   setTimeout(()=>box.classList.remove('wait'),450);
   const rb=$('rerollB');rb.style.display=run.rerolls>0?'':'none';rb.textContent=`Reroll (${run.rerolls} left)`;
   sfx.level();
@@ -1943,11 +1949,57 @@ function updateHud(){
     const v=(ok?1:0)+tx;if(hud.last.set!==v){hud.last.set=v;const si=$('setI');si.classList.toggle('ready',ok);si.lastChild.textContent=tx}}
 }
 function soulsEarned(){const base=run.souls+Math.floor(run.kills/(run.mode==='full'?BAL.fullKillSouls:15))+Math.floor(run.time/10)+(run.won?MODES[run.mode].win:0);return{base,total:Math.round(BAL.soulMul*base*(1+.15*meta('greed')+.1*townLv('watch')+(S&&S.souls||0)/100))}}
+/* S31 (R34): play-test recorder. Every night started from the town is written down on this device
+   (key ashenHorde_playtest, last 60 nights); Settings can download it as a file or copy it. Test bots are not recorded. */
+const PKEY='ashenHorde_playtest';
+const PT=(()=>{try{const o=JSON.parse(localStorage.getItem(PKEY)||'null');if(o&&Array.isArray(o.nights))return o}catch(e){}return{v:1,nights:[],cur:null}})();
+const ptSave=()=>{try{if(PT.nights.length>60)PT.nights.splice(0,PT.nights.length-60);localStorage.setItem(PKEY,JSON.stringify(PT,(k,v)=>k==='_run'?undefined:v))}catch(e){}};
+if(PT.cur){delete PT.cur._m;PT.cur.result='unfinished (page closed)';PT.nights.push(PT.cur);PT.cur=null;ptSave()}
+const ptOn=()=>PT.cur&&PT.cur._run===run;
+const r1=v=>Math.round(v*10)/10;
+function ptBuild(){return{weapons:run.weapons.map(w=>(WEAPONS[w.id]?WEAPONS[w.id].name:w.id)+' '+w.lvl),passives:Object.keys(run.passives).map(k=>(PASSIVES[k]?PASSIVES[k].name:k)+' '+run.passives[k]),gifts:{damage:run.xd||0,life:run.xl||0}}}
+function ptStart(){
+  PT.cur={_run:run,started:new Date().toISOString(),hero:HEROES[run.hero].name,mode:MODES[run.mode].name,
+    before:{souls:save.souls,nightsPlayed:save.runs,wins:save.best.wins||0,heroes:Object.keys(save.heroes).filter(k=>save.heroes[k]),altar:Object.assign({},save.meta),town:TOWN.map(b=>b.n+' '+townLv(b.k)),gear:gOn(run.hero).map(gName),setSkill:!!run.set3,maxLife:Math.round(S.maxHp),armor:S.armor,rerolls:run.rerolls,revives:run.revives},
+    picks:[],items:[],minutes:[],hitsTaken:0,damageTaken:0,biggestHit:0,revivesUsed:0,_m:{hits:0,dmg:0,low:1}};
+  ptSave();
+}
+function ptTick(){/* one line per minute of the night */
+  if(!ptOn())return;const c=PT.cur,m=Math.floor(run.time/60);if(m<=c.minutes.length||run.won||run.over)return;
+  c.minutes.push({min:c.minutes.length+1,level:run.level,kills:run.kills,life:Math.round(P.hp)+'/'+Math.round(S.maxHp),lowestLife:Math.round(c._m.low*100)+'%',hits:c._m.hits,damage:Math.round(c._m.dmg),monsters:enemies.length,danger:Math.round(dangerT()),wrath:r1(run.wrath||0)});
+  c._m={hits:0,dmg:0,low:P.hp/S.maxHp};ptSave();
+}
+function ptHit(dd){if(!ptOn())return;const c=PT.cur;c.hitsTaken++;c.damageTaken+=dd;c.biggestHit=Math.max(c.biggestHit,Math.round(dd));c._m.hits++;c._m.dmg+=dd;c._m.low=Math.min(c._m.low,Math.max(0,P.hp/S.maxHp));c.lastHit={at:fmt(run.time),damage:Math.round(dd)}}
+function ptNote(k,v){if(!ptOn())return;const c=PT.cur;if(k==='pick')c.picks.push({at:fmt(run.time),level:run.level-run.pending+1,took:v});else if(k==='item')c.items.push({at:fmt(run.time),used:v});else if(k==='revive')c.revivesUsed++;else c[k]=fmt(run.time)}
+function ptEnd(win,earned){
+  if(!ptOn())return;const c=PT.cur;delete c._run;delete c._m;
+  Object.assign(c,{result:win?'won':run.quit?'abandoned':'died',time:fmt(run.time),seconds:Math.round(run.time),kills:run.kills,level:run.level,round:run.mode==='full'?(run.round+1)+' of '+MODES.full.rounds:'',
+    soulsEarned:earned,townBurned:run.burned?HUBN[run.burned]:'',damageTaken:Math.round(c.damageTaken),finalBuild:ptBuild(),monstersAtEnd:enemies.length});
+  PT.nights.push(c);PT.cur=null;ptSave();syncPT();
+}
+function ptText(){
+  const L=['Ashen Horde 2 · play-test results','Saved '+new Date().toLocaleString()+' · '+ptCount()+' nights','Device: '+innerWidth+'x'+innerHeight+(matchMedia('(pointer:coarse)').matches?' touch':' mouse'),''];
+  let i=0;PT.nights.forEach(n=>L.push(n.result==='progress reset'?`   ${n.started.slice(0,16).replace('T',' ')} · progress reset to zero`:`${++i}. ${n.started.slice(0,16).replace('T',' ')} · ${n.hero} · ${n.mode} · ${n.result||'?'} at ${n.time||'?'} · Lv ${n.level||'?'} · ${n.kills||0} kills · ${n.damageTaken||0} damage taken in ${n.hitsTaken||0} hits · +${n.soulsEarned||0} souls`));
+  return L.join('\n')+'\n\n--- full details (for Claude) ---\n'+JSON.stringify({game:'Ashen Horde 2',saved:new Date().toISOString(),balance:BAL,nights:PT.nights},null,1);
+}
+const ptCount=()=>PT.nights.filter(n=>n.result!=='progress reset').length;
+function syncPT(){const el=$('ptN'),c=ptCount();if(el)el.textContent=c?`${c} night${c>1?'s':''} recorded on this device`:'No nights recorded yet. Every night you play is recorded.'}
+$('ptDl').onclick=()=>{const d=new Date(),p=x=>String(x).padStart(2,'0'),name=`ashen-horde-playtest-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.txt`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ptText()],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);$('ptMsg').textContent='Saved as '+name+' (in your Downloads)'};
+$('ptCp').onclick=async()=>{const t=ptText();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch(_){}}$('ptMsg').textContent=ok?'Copied. Paste it into your chat with Claude.':'Copy did not work here; use Download instead.'};
+/* S31 (R34): Reset progress, two taps so it can't happen by accident */
+let rsT=0;
+$('resetB').onclick=()=>{const b=$('resetB');
+  if(Date.now()-rsT>4000){rsT=Date.now();b.textContent='Tap again to erase everything';b.classList.add('arm');setTimeout(()=>{if(Date.now()-rsT>=3900){b.textContent='Reset progress';b.classList.remove('arm')}},4000);return}
+  rsT=0;const muted=save.muted;save=defaults();save.muted=muted;SET.mode='short';saveSet();persist();
+  PT.nights.push({started:new Date().toISOString(),result:'progress reset'});ptSave();syncPT();
+  b.textContent='Reset progress';b.classList.remove('arm');$('ptMsg').textContent='Progress erased. You start again with the Barbarian.';
+  hubSel={t:'none'};buildMenu()};
 function showEnd(win){
   const e=soulsEarned();save.souls+=e.total;save.runs++;save.best.time=Math.max(save.best.time,Math.floor(run.time));save.best.kills=Math.max(save.best.kills,run.kills);if(win)save.best.wins=(save.best.wins||0)+1;
   /* S07: a lost night burns one standing building (its bonus drops a level until repaired) */
   run.burned=null;if(!win){const c=TOWN.filter(b=>townRaw(b.k)>0&&!townHurt(b.k));if(c.length){const b=c[(rand()*c.length)|0];save.dmg=save.dmg||{};save.dmg[b.k]=1;run.burned=b.k}}
-  persist();
+  persist();ptEnd(win,e.total);
   $('endT').textContent=win?'Victory':'You have fallen';$('endM').querySelector('.box').classList.toggle('dead',!win);
   const md=MODES[run.mode],left=fmt(Math.ceil(Math.max(0,runLen()-run.time)));
   $('endS').textContent=win?`Malgrath, the Ash Lord, is slain. The ${md.name} is yours.`:run.bossSpawned?'The Ash Lord claims another soul.':run.mode==='full'?`${md.name}: fallen in round ${run.round+1} of ${md.rounds}, ${left} before the Ash Lord.`:`${md.name}: the Ash Lord was ${left} away.`;
@@ -2187,7 +2239,7 @@ function buildAltar(){
     row.querySelector('button').onclick=()=>{if(max||save.souls<cost)return;auInit();save.souls-=cost;save.meta[k]=l+1;persist();sfx.chest();buildAltar()};
     list.appendChild(row)}
 }
-$('playB').onclick=()=>{auInit();const id=save.hero,h=HEROES[id];if(!save.heroes[id]){if(save.souls>=h.cost){save.souls-=h.cost;save.heroes[id]=true;persist();sfx.chest();buildMenu()}return}hubClose();newRun(id,nightMode())};
+$('playB').onclick=()=>{auInit();const id=save.hero,h=HEROES[id];if(!save.heroes[id]){if(save.souls>=h.cost){save.souls-=h.cost;save.heroes[id]=true;persist();sfx.chest();buildMenu()}return}hubClose();newRun(id,nightMode());ptStart()};
 $('altarBack').onclick=()=>{buildMenu();setState('menu')};
 /* S24 (R26): the Merchant's page: your belt on top, his wares below; a bought item goes into the first empty slot */
 function buildShop(){
@@ -2261,13 +2313,13 @@ $('pauseB').onclick=()=>{if(state!=='play')return;const bl=$('buildList');bl.inn
   for(const k in run.passives){const d=document.createElement('div');d.appendChild(icon(k,44));d.insertAdjacentHTML('beforeend',`<span>${run.passives[k]}</span>`);bl.appendChild(d)}
   setState('pause')};
 $('resumeB').onclick=()=>{auInit();setState('play')};
-$('quitB').onclick=()=>{run.over=true;showEnd(false)};
-$('againB').onclick=()=>{auInit();newRun(run.hero,run.mode)};
+$('quitB').onclick=()=>{run.over=true;run.quit=true;showEnd(false)};
+$('againB').onclick=()=>{auInit();newRun(run.hero,run.mode);ptStart()};
 $('homeB').onclick=()=>{hubSel=run&&run.burned?{t:'b',k:run.burned}:{t:'none'};run=null;buildMenu();setState('menu')};
 document.querySelectorAll('.muteB').forEach(b=>b.onclick=e=>{e.stopPropagation();auInit();setMute(!save.muted)});
 /* settings: separate music / effects volume, mute, screen shake (stored on this device only) */
 function syncSet(){for(const[id,k]of[['volM','music'],['volS','sfx']]){const el=$(id),v=Math.round(SET[k]*100);el.value=v;el.style.setProperty('--p',v+'%');$(id+'o').textContent=v}$('shakeT').textContent='Screen shake: '+(SET.shake?'On':'Off');$('goreT').textContent='Blood: '+(SET.gore?'On':'Off');setMute(save.muted,true)}
-document.querySelectorAll('.setB').forEach(b=>b.onclick=()=>{auInit();syncSet();setState('settings')});
+document.querySelectorAll('.setB').forEach(b=>b.onclick=()=>{auInit();syncSet();setState('settings');syncPT();$('ptMsg').textContent='';$('resetB').hidden=setFrom==='pause'});
 for(const[id,k]of[['volM','music'],['volS','sfx']])$(id).addEventListener('input',e=>{SET[k]=e.target.value/100;e.target.style.setProperty('--p',e.target.value+'%');$(id+'o').textContent=e.target.value;applyVol();saveSet();if(k==='sfx'&&!thr('volTest',120))sfx.impact('cleave')});
 $('muteT').onclick=()=>{auInit();setMute(!save.muted)};
 $('shakeT').onclick=()=>{SET.shake=!SET.shake;saveSet();syncSet()};
