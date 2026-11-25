@@ -140,6 +140,9 @@ h1,h2,h3{font-family:Cinzel,Georgia,serif;margin:0;line-height:1.05;text-wrap:ba
 .stats div{padding:10px;border:1px solid rgba(201,154,62,.22);border-radius:2px;background:rgba(0,0,0,.45);box-shadow:inset 0 0 14px rgba(0,0,0,.7)}
 .stats b{display:block;font:700 22px Cinzel,serif;color:#f0dcb4}
 .stats small{color:var(--mute);font-size:13px}
+/* S32 (R36): the skill that dealt the most damage, with its damage per second */
+.top{margin:10px 0 2px;color:#f0dcb4;font-size:15px;line-height:1.35}.top:empty{display:none}
+.top b{font:700 16px Cinzel,serif;color:#ffcf7a}.top small{display:block;color:var(--mute);font-size:13px}
 .earn{font:700 22px Cinzel,serif;display:flex;justify-content:center;align-items:center;gap:10px;color:#e7d2ff}
 .earn small{display:block;font:400 13px Spectral,serif;color:var(--mute)}
 #endM .box.dead{background:radial-gradient(ellipse at 50% 0%,rgba(160,10,4,.4),transparent 60%),linear-gradient(180deg,#1c0d0a,#080404)}
@@ -327,6 +330,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:2px;bac
   <div class="orn"></div>
   <p id="endS" class="sub"></p>
   <div id="endStats" class="stats"></div>
+  <p id="endTop" class="top"></p>
   <div class="earn"><span class="soul"></span><div>+<span id="endSouls">0</span> souls<small id="endBreak"></small></div></div>
   <p id="endBurn"></p>
   <p id="endCache"></p>
@@ -1497,12 +1501,15 @@ function separate(){
 /* ---------- combat ---------- */
 function dmgText(x,y,v,crit,col){if(texts.length>60)return;texts.push({x:x+rr(-6,6),y,v:Math.round(v),life:crit?.9:.7,max:crit?.9:.7,crit,col})}
 let forceCrit=false;/* S25 (R27): Vanish makes the next daggers sure to be critical hits */
+/* S32 (R36): damage per skill for the end screen. dSrc names the skill whose hit is landing; PK maps projectile kinds to skills */
+let dSrc='';const PK={bone:'bonespear',dag:'daggers',fire:'fireball',axe:'axes',star:'stars',saw:'saw',ndl:'needles'};
 function hurt(e,dmg,kx,ky,quiet){
   const fc=forceCrit;forceCrit=false;
   if(e.dead)return false;let crit=false;if(fc||(S.crit&&rand()<S.crit)){dmg*=2;crit=true}
   if(run.rageT>run.time){dmg*=1.4;if(!quiet&&P.hp<S.maxHp)P.hp=Math.min(S.maxHp,P.hp+1)}/* S25 (R27): Blood Rage */
   if(run.cryT>run.time)dmg*=1.2;if(e.curseT>run.time)dmg*=1+e.curseA;/* S23: War Cry and Withering Curse */
   if(run.furyT>run.time)dmg*=1.3;/* S24 (R26): Fury Tonic */
+  {const s=dSrc||'other',b=run.dmgBy||(run.dmgBy={}),r=b[s]||(b[s]={d:0,t0:run.time});r.d+=Math.min(dmg,Math.max(0,e.hp))}/* S32 (R36): only the damage that lands, not overkill */
   e.hp-=dmg;e.flash=.09;e.hitT=.16;e.kx+=kx/e.mass;e.ky+=ky/e.mass;
   if(!quiet||rand()<.3)dmgText(e.x,e.y-e.r-4,dmg,crit);
   sfx.impact(curW);if(crit){sfx.crit();if(!thr("critStop",900))stop(.03)}
@@ -1554,10 +1561,10 @@ function damagePlayer(d){
   if(SET.gore){const n=dd>=10?10:5;for(let i=0;i<n;i++)drop1(P.x,P.y-4,10,rand()*TAU,rr(40,130),GORE.hero,rr(.4,.8),rr(1.2,2.4));addDecal('bloodD',P.x+rr(-6,6),P.y+10+rr(-3,3),rr(7,11),25)}
   else burst(P.x,P.y-6,6,'#8a0f08',80,.4,2,false);
   /* S25 (R27): Heart of Winter and Vanish answer a blow */
-  if(P.hp>0&&run.leg.winter&&run.time>=run.wint){run.wint=run.time+3;const w=getW('frostnova');novaCast(w?w.lvl:1)}
+  if(P.hp>0&&run.leg.winter&&run.time>=run.wint){run.wint=run.time+3;dSrc='frostnova';const w=getW('frostnova');novaCast(w?w.lvl:1)}
   if(P.hp>0&&run.set3==='rogue'&&run.time>=run.vanT){run.vanT=run.time+6;P.inv=Math.max(P.inv,1);run.sure=3;burst(P.x,P.y-6,20,'154,125,255',90,.6,2.2,true,-1);sfx.throw()}
   if(P.hp<=0){
-    if(run.revives>0){run.revives--;ptNote('revive');P.hp=S.maxHp*.5;P.inv=2.2;banner('Undying','Death rejects you');sfx.roar();run.shake=14;flashA=.7;flashC='255,230,170';
+    if(run.revives>0){run.revives--;ptNote('revive');P.hp=S.maxHp*.5;P.inv=2.2;banner('Undying','Death rejects you');sfx.roar();run.shake=14;flashA=.7;flashC='255,230,170';dSrc='revive';
       forNear(P.x,P.y,320,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,e.boss?400:250,Math.cos(a)*600,Math.sin(a)*600,true)});
       effects.push({k:'nova',x:P.x,y:P.y,R:320,life:.5,max:.5,col:'255,200,120'});
     }else{P.hp=0;run.over=true;run.endT=1.9;gore({type:'hero',x:P.x,y:P.y,r:14,elite:1},true,rand()*TAU);burst(P.x,P.y,30,'255,120,40',120,1,2.5,true,-1);sfx.die_hero();run.shake=10;stop(.25)}
@@ -1584,9 +1591,9 @@ function miniChain(x,y,dmg){const used=[],pts=[[x,y]];let tg=nearest(x,y,170,use
   if(pts.length<2)return;const jag=[];for(let i=0;i<pts.length-1;i++){const[a1,b1]=pts[i],[a2,b2]=pts[i+1];for(let s=0;s<4;s++){const f=s/4;jag.push([a1+(a2-a1)*f+(s?rr(-7,7):0),b1+(b2-b1)*f+(s?rr(-7,7):0)])}}jag.push(pts[pts.length-1]);
   effects.push({k:'bolt',pts:jag,life:.18,max:.18});if(!thr('twinZap',140))sfx.zap()}
 /* S25 (R27): Pyre Charm sets foes alight; Venomfang Daggers leave poison */
-function ignite(e,d){e.ign=run.time+3;e.ignD=Math.max(e.ignD&&e.ign>run.time?e.ignD:0,d);if(!(e.ignT>0))e.ignT=.5}
+function ignite(e,d){e.ign=run.time+3;e.ignS=dSrc;e.ignD=Math.max(e.ignD&&e.ign>run.time?e.ignD:0,d);if(!(e.ignT>0))e.ignT=.5}
 /* S26 (R28): a Wandering Star bursts */
-function starPop(p){p.dead=true;curW='lightning';forNear(p.x,p.y,p.ex,e=>{const a=Math.atan2(e.y-p.y,e.x-p.x);hurt(e,p.dmg,Math.cos(a)*120,Math.sin(a)*120)});
+function starPop(p){p.dead=true;curW='lightning';dSrc='stars';forNear(p.x,p.y,p.ex,e=>{const a=Math.atan2(e.y-p.y,e.x-p.x);hurt(e,p.dmg,Math.cos(a)*120,Math.sin(a)*120)});
   effects.push({k:'boom',x:p.x,y:p.y,R:p.ex,life:.3,max:.3,col:'200,190,255',gl:'purple'});burst(p.x,p.y,12,'210,200,255',p.ex*2.5,.4,2.5,true)}
 /* S26 (R28): the Stone Guardian follows the hero, walks to nearby foes and smashes the ground */
 function golemUpdate(w,L,dt){const t=T.golem;let g=run.golem;
@@ -1610,9 +1617,9 @@ function drawGolem(g){const bob=g.moving?Math.abs(Math.sin(g.walk*8))*2:Math.sin
 function venomCloud(x,y){if(zones.filter(z=>z.k==='poison').length>=14)return;const w=getW('poison'),L=w?w.lvl:1;
   zones.push({k:'poison',x,y,R:40*S.area,dmg:T.poison.dmg[L]*S.dmgMul,life:2.5,max:2.5,tick:.5,t:0,ph:rand()*6});burst(x,y,8,'120,230,90',60,.4,2,true)}
 function updateWeapons(dt){
-  if(run.spin2>0){run.spin2-=dt;run.spin2h-=dt;if(run.spin2h<=0){run.spin2h=.2;spinHit(1)}}/* S25: the axe's short spin without the spell */
+  if(run.spin2>0){run.spin2-=dt;run.spin2h-=dt;if(run.spin2h<=0){run.spin2h=.2;dSrc='whirlwind';spinHit(1)}}/* S25: the axe's short spin without the spell */
   for(const w of run.weapons){
-    const L=w.lvl,t=T[w.id];
+    const L=w.lvl,t=T[w.id];dSrc=w.id;
     if(w.id==='skulls'||w.id==='blades'){const sk=w.id==='skulls',pyre=sk&&run.leg.pyre;
       const n=t.n[L]+(pyre?1:0),R=(sk?74:54)*S.area,dmg=t.dmg[L]*S.dmgMul;w.pos=[];curW=sk?'skulls':'dag';
       for(let i=0;i<n;i++){const a=run.time*t.spd[L]+i*TAU/n,x=P.x+Math.cos(a)*R,y=P.y+Math.sin(a)*R*.85;w.pos.push([x,y,a]);
@@ -1699,7 +1706,7 @@ function updateMinions(dt){
     let tx,ty;if(m.tgt){tx=m.tgt.x;ty=m.tgt.y}else{const a=run.time*.7+i*TAU/minions.length;tx=P.x+Math.cos(a)*42;ty=P.y+Math.sin(a)*32}
     const dx=tx-m.x,dy=ty-m.y,d=Math.hypot(dx,dy)||1,reach=m.tgt?m.tgt.r+11:4;m.moving=d>reach;
     if(d>reach){const sp=Math.min(175,d*5);m.x+=dx/d*sp*dt;m.y+=dy/d*sp*dt;if(Math.abs(dx)>2)m.face=dx>0?1:-1}
-    else if(m.tgt&&m.atk<=0){curW='minion';hurt(m.tgt,t.dmg[L]*S.dmgMul,dx/d*90,dy/d*90);m.atk=t.acd[L]*S.cdMul;m.swing=.15;m.face=dx>0?1:-1}
+    else if(m.tgt&&m.atk<=0){curW='minion';dSrc='skeletons';hurt(m.tgt,t.dmg[L]*S.dmgMul,dx/d*90,dy/d*90);m.atk=t.acd[L]*S.cdMul;m.swing=.15;m.face=dx>0?1:-1}
     if(Math.hypot(m.x-P.x,m.y-P.y)>380){burst(m.x,m.y,10,'109,255,125',60,.4,2,true);m.x=P.x+rr(-30,30);m.y=P.y+rr(-30,30);burst(m.x,m.y,10,'109,255,125',60,.4,2,true)}
   });
 }
@@ -1738,7 +1745,7 @@ function update(dt){
   const far=spawnR()*1.55;
   for(const e of enemies){
     if(e.dead)continue;
-    if(e.ign>run.time){e.ignT-=dt;if(e.ignT<=0){e.ignT=.5;curW='brimstone';hurt(e,e.ignD,0,0,true);if(e.dead)continue}if(rand()<.3)addP(e.x+rr(-e.r,e.r)*.6,e.y-e.r*.4,0,-30,.4,2,'255,120,30',true,-1)}/* S25: Pyre Charm */
+    if(e.ign>run.time){e.ignT-=dt;if(e.ignT<=0){e.ignT=.5;curW='brimstone';dSrc=e.ignS||'ember';hurt(e,e.ignD,0,0,true);if(e.dead)continue}if(rand()<.3)addP(e.x+rr(-e.r,e.r)*.6,e.y-e.r*.4,0,-30,.4,2,'255,120,30',true,-1)}/* S25: Pyre Charm */
     e.flash-=dt;e.atk-=dt;e.lunge-=dt;e.hitT-=dt;if(e.slow>0)e.slow-=dt;if(e.born>0)e.born-=dt;
     /* badly wounded foes leave a trail of drips */
     if(SET.gore&&e.hp<e.maxHp*.6){const gd=GORE[e.type];if(gd&&BLEEDS(gd.d)){e.bl=(e.bl||rr(.1,.5))-dt;if(e.bl<=0){e.bl=e.elite||e.boss?rr(.15,.3):rr(.5,1);if(decals.length<DCAP[Q]*.85)addDecal(gd.d+'D',e.x+rr(-3,3),e.y+e.r*.55,rr(5,9)*(e.boss?2.2:e.elite?1.5:1),20)}}}
@@ -1770,7 +1777,7 @@ function update(dt){
     if(p.k==='axe'||p.k==='saw'){p.age+=dt;if(!p.back){const s=Math.max(0,400*(1-p.age/.5));p.vx=Math.cos(p.a)*s;p.vy=Math.sin(p.a)*s;if(p.age>=.5){p.back=true;p.hits=[]}}
       else{const dx=P.x-p.x,dy=P.y-p.y,d=Math.hypot(dx,dy)||1;p.vx=dx/d*470;p.vy=dy/d*470;if(d<16)p.dead=true}}
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
-    forNear(p.x,p.y,p.r,e=>{if(p.dead||p.hits.includes(e.id))return;p.hits.push(e.id);if(p.k==='fire'){explode(p);return}if(p.k==='star'){starPop(p);return}curW=p.k==='axe'||p.k==='saw'?'cleave':p.k==='ndl'?'dag':p.k;
+    forNear(p.x,p.y,p.r,e=>{if(p.dead||p.hits.includes(e.id))return;p.hits.push(e.id);dSrc=PK[p.k]||p.k;if(p.k==='fire'){explode(p);return}if(p.k==='star'){starPop(p);return}curW=p.k==='axe'||p.k==='saw'?'cleave':p.k==='ndl'?'dag':p.k;
       if(p.sure)forceCrit=true;const cr=hurt(e,p.dmg,p.vx*.3,p.vy*.3);
       /* S25 (R27): Wand of the Restless and Venomfang Daggers */
       if(p.k==='bone'&&e.dead&&run.leg.restless&&rand()<.25)raiseTemp(e.x,e.y);
@@ -1827,7 +1834,7 @@ function bossAI(b,dt,dx,dy,sp){
 }
 function ring(b,n,off){for(let i=0;i<n;i++){const a=(i+off)/n*TAU;eprojs.push({k:'hell',x:b.x,y:b.y,vx:Math.cos(a)*165,vy:Math.sin(a)*165,dmg:12,r:8,life:4})}sfx.ring()}
 function explode(p){
-  p.dead=true;curW='fire';forNear(p.x,p.y,p.ex,e=>{const a=Math.atan2(e.y-p.y,e.x-p.x);if(p.over)e.slow=Math.max(e.slow,2.5);hurt(e,p.dmg,Math.cos(a)*150,Math.sin(a)*150)});
+  p.dead=true;curW='fire';dSrc='fireball';forNear(p.x,p.y,p.ex,e=>{const a=Math.atan2(e.y-p.y,e.x-p.x);if(p.over)e.slow=Math.max(e.slow,2.5);hurt(e,p.dmg,Math.cos(a)*150,Math.sin(a)*150)});
   if(p.over){effects.push({k:'nova',x:p.x,y:p.y,R:p.ex,life:.5,max:.5,col:'170,225,255'});run.shake=Math.max(run.shake,6);flashA=Math.max(flashA,.15);flashC='255,170,90'}
   if(run.leg.twinstorm)miniChain(p.x,p.y,p.dmg*(p.over?.25:.6));
   effects.push({k:'boom',x:p.x,y:p.y,R:p.ex,life:.35,max:.35});burst(p.x,p.y,16,'255,130,40',p.ex*3,.45,3,true);burst(p.x,p.y,6,'rgba(40,30,25,.7)',p.ex*1.5,.8,4,false,-1);sfx.boom();run.shake=Math.max(run.shake,2.5);
@@ -1838,20 +1845,20 @@ function explode(p){
 function updateZones(dt){
   for(const z of zones){z.life-=z.k==='mark'?dt:dt/(S.dur||1);/* S26 (R28): Lingering stretches ground effects, not the meteor's fall */
     if(z.k==='mark'){if(z.life<=0)meteorHit(z);continue}
-    if(z.k==='trap'){forNear(z.x,z.y,z.R,e=>{if((e.trT||0)>run.time)return;e.trT=run.time+.35;curW='dag';hurt(e,z.dmg,0,0,true)});continue}
-    z.t-=dt;if(z.t<=0){z.t=z.tick;curW=z.k==='burn'?'brimstone':'poison';forNear(z.x,z.y,z.R,e=>hurt(e,z.dmg,0,0,true))}
+    if(z.k==='trap'){forNear(z.x,z.y,z.R,e=>{if((e.trT||0)>run.time)return;e.trT=run.time+.35;curW='dag';dSrc='bladetrap';hurt(e,z.dmg,0,0,true)});continue}
+    z.t-=dt;if(z.t<=0){z.t=z.tick;curW=z.k==='burn'?'brimstone':'poison';dSrc=z.k==='burn'?'fireball':'poison';forNear(z.x,z.y,z.R,e=>hurt(e,z.dmg,0,0,true))}
     if(z.k==='poison'&&rand()<.35)addP(z.x+rr(-z.R,z.R)*.7,z.y+rr(-z.R,z.R)*.5,0,-14,.9,rr(2,3.5),'110,220,80',true,-1);
     else if(z.k==='burn'&&rand()<.3)addP(z.x+rr(-z.R,z.R)*.7,z.y+rr(-z.R,z.R)*.5,0,-30,.5,2,'255,120,30',true,-1)}
   zones=zones.filter(z=>z.life>0);
-  for(const c of run.cb){c.t-=dt;if(c.t>0)continue;c.done=true;const t=T.corpseburst,R=t.R[c.L]*S.area;curW='bone';
+  for(const c of run.cb){c.t-=dt;if(c.t>0)continue;c.done=true;const t=T.corpseburst,R=t.R[c.L]*S.area;curW='bone';dSrc='corpseburst';
     forNear(c.x,c.y,R,e=>{const a=Math.atan2(e.y-c.y,e.x-c.x);hurt(e,t.dmg[c.L]*S.dmgMul,Math.cos(a)*140,Math.sin(a)*140,true)});
     effects.push({k:'boom',x:c.x,y:c.y,R,life:.35,max:.35,col:'120,255,150',gl:'green'});burst(c.x,c.y,14,'200,255,200',R*2.5,.45,2.4,true);burst(c.x,c.y,8,'230,220,200',R*1.6,.6,2.5,false);sfx.bonecast();sfx.boom()}
   run.cb=run.cb.filter(c=>!c.done);
 }
-function meteorHit(z){curW='fire';forNear(z.x,z.y,z.R,e=>{const a=Math.atan2(e.y-z.y,e.x-z.x);hurt(e,z.dmg,Math.cos(a)*200,Math.sin(a)*200)});
+function meteorHit(z){curW='fire';dSrc='meteor';forNear(z.x,z.y,z.R,e=>{const a=Math.atan2(e.y-z.y,e.x-z.x);hurt(e,z.dmg,Math.cos(a)*200,Math.sin(a)*200)});
   effects.push({k:'boom',x:z.x,y:z.y,R:z.R,life:.5,max:.5});burst(z.x,z.y,26,'255,130,40',z.R*3.2,.6,3.2,true);burst(z.x,z.y,10,'rgba(40,30,25,.7)',z.R*1.8,.9,4,false,-1);addDecal('scorch',z.x,z.y+4,z.R*1.5,20);
   run.shake=Math.max(run.shake,5);sfx.boom();flashA=Math.max(flashA,.12);flashC='255,150,60'}
-function landSlam(l){const t=T.leapslam,L=l.L,R=t.R[L]*S.area;curW='cleave';
+function landSlam(l){const t=T.leapslam,L=l.L,R=t.R[L]*S.area;curW='cleave';dSrc='leapslam';
   forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);if(!e.boss&&t.stun[L])e.stun=Math.max(e.stun||0,e.elite?t.stun[L]*.5:t.stun[L]);hurt(e,t.dmg[L]*S.dmgMul,Math.cos(a)*300,Math.sin(a)*300)});
   effects.push({k:'nova',x:P.x,y:P.y,R,life:.4,max:.4,col:'255,200,140'},{k:'boom',x:P.x,y:P.y,R:R*.6,life:.35,max:.35});addDecal('scorch',P.x,P.y+8,R*1.1,30);
   burst(P.x,P.y+6,20,'rgba(90,80,70,.7)',R*2.4,.6,3,false);run.shake=Math.max(run.shake,7);stop(.05);sfx.boom();P.safe=Math.max(P.safe,.3)}
@@ -1867,7 +1874,7 @@ function useItem(i){
   if(state!=='play'||!run||run.over||run.won)return;const b=belt(),id=b[i];if(!id||!WARES[id])return;
   b[i]=null;persist();syncBelt();ptNote('item',WARES[id].name||id);
   if(id==='draught'){const h=Math.round(S.maxHp*.4);P.hp=Math.min(S.maxHp,P.hp+h);texts.push({x:P.x,y:P.y-24,v:'+'+h,life:1,max:1,col:'#7dff8a'});sfx.heal();burst(P.x,P.y,22,'255,80,80',90,.7,2.2,true,-1)}
-  else if(id==='bomb'){const R=240,dmg=90*(1+dangerT()/90)*S.dmgMul;curW='fire';
+  else if(id==='bomb'){const R=240,dmg=90*(1+dangerT()/90)*S.dmgMul;curW='fire';dSrc='bomb';
     forNear(P.x,P.y,R,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,dmg,Math.cos(a)*520,Math.sin(a)*520,true)});
     effects.push({k:'nova',x:P.x,y:P.y,R,life:.5,max:.5,col:'255,170,90'},{k:'boom',x:P.x,y:P.y,R:R*.55,life:.45,max:.45});
     burst(P.x,P.y,40,'255,130,40',R*2.6,.7,3.2,true);burst(P.x,P.y,14,'rgba(40,30,25,.7)',R*1.4,1,4.5,false,-1);addDecal('scorch',P.x,P.y+8,R*.9,40);
@@ -1974,12 +1981,12 @@ function ptNote(k,v){if(!ptOn())return;const c=PT.cur;if(k==='pick')c.picks.push
 function ptEnd(win,earned){
   if(!ptOn())return;const c=PT.cur;delete c._run;delete c._m;
   Object.assign(c,{result:win?'won':run.quit?'abandoned':'died',time:fmt(run.time),seconds:Math.round(run.time),kills:run.kills,level:run.level,round:run.mode==='full'?(run.round+1)+' of '+MODES.full.rounds:'',
-    soulsEarned:earned,townBurned:run.burned?HUBN[run.burned]:'',damageTaken:Math.round(c.damageTaken),finalBuild:ptBuild(),monstersAtEnd:enemies.length});
+    soulsEarned:earned,townBurned:run.burned?HUBN[run.burned]:'',damageTaken:Math.round(c.damageTaken),finalBuild:ptBuild(),monstersAtEnd:enemies.length,damageBySkill:dmgTable().map(x=>`${x.n}: ${Math.round(x.d)} damage, ${Math.round(x.dps)} DPS`)});
   PT.nights.push(c);PT.cur=null;ptSave();syncPT();
 }
 function ptText(){
   const L=['Ashen Horde 2 · play-test results','Saved '+new Date().toLocaleString()+' · '+ptCount()+' nights','Device: '+innerWidth+'x'+innerHeight+(matchMedia('(pointer:coarse)').matches?' touch':' mouse'),''];
-  let i=0;PT.nights.forEach(n=>L.push(n.result==='progress reset'?`   ${n.started.slice(0,16).replace('T',' ')} · progress reset to zero`:`${++i}. ${n.started.slice(0,16).replace('T',' ')} · ${n.hero} · ${n.mode} · ${n.result||'?'} at ${n.time||'?'} · Lv ${n.level||'?'} · ${n.kills||0} kills · ${n.damageTaken||0} damage taken in ${n.hitsTaken||0} hits · +${n.soulsEarned||0} souls`));
+  let i=0;PT.nights.forEach(n=>L.push(n.result==='progress reset'?`   ${n.started.slice(0,16).replace('T',' ')} · progress reset to zero`:`${++i}. ${n.started.slice(0,16).replace('T',' ')} · ${n.hero} · ${n.mode} · ${n.result||'?'} at ${n.time||'?'} · Lv ${n.level||'?'} · ${n.kills||0} kills · ${n.damageTaken||0} damage taken in ${n.hitsTaken||0} hits · +${n.soulsEarned||0} souls${n.damageBySkill&&n.damageBySkill.length?' · top '+n.damageBySkill[0]:''}`));
   return L.join('\n')+'\n\n--- full details (for Claude) ---\n'+JSON.stringify({game:'Ashen Horde 2',saved:new Date().toISOString(),balance:BAL,nights:PT.nights},null,1);
 }
 const ptCount=()=>PT.nights.filter(n=>n.result!=='progress reset').length;
@@ -1995,6 +2002,10 @@ $('resetB').onclick=()=>{const b=$('resetB');
   PT.nights.push({started:new Date().toISOString(),result:'progress reset'});ptSave();syncPT();
   b.textContent='Reset progress';b.classList.remove('arm');$('ptMsg').textContent='Progress erased. You start again with the Barbarian.';
   hubSel={t:'none'};buildMenu()};
+/* S32 (R36): damage per skill, most first; DPS counts from the skill's first hit to the end of the night */
+const DNAME={revive:'Undying',bomb:'Ash Bomb',other:'Other'};
+function dmgTable(){return Object.entries((run&&run.dmgBy)||{}).filter(([,r])=>r.d>0).map(([k,r])=>({k,n:WEAPONS[k]?WEAPONS[k].name:DNAME[k]||k,d:r.d,dps:r.d/Math.max(1,run.time-r.t0)})).sort((a,b)=>b.d-a.d)}
+const fmtN=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e4?Math.round(n/1e3)+'k':n>=1e3?(n/1e3).toFixed(1)+'k':String(Math.round(n));
 function showEnd(win){
   const e=soulsEarned();save.souls+=e.total;save.runs++;save.best.time=Math.max(save.best.time,Math.floor(run.time));save.best.kills=Math.max(save.best.kills,run.kills);if(win)save.best.wins=(save.best.wins||0)+1;
   /* S07: a lost night burns one standing building (its bonus drops a level until repaired) */
@@ -2004,6 +2015,7 @@ function showEnd(win){
   const md=MODES[run.mode],left=fmt(Math.ceil(Math.max(0,runLen()-run.time)));
   $('endS').textContent=win?`Malgrath, the Ash Lord, is slain. The ${md.name} is yours.`:run.bossSpawned?'The Ash Lord claims another soul.':run.mode==='full'?`${md.name}: fallen in round ${run.round+1} of ${md.rounds}, ${left} before the Ash Lord.`:`${md.name}: the Ash Lord was ${left} away.`;
   $('endStats').innerHTML=[[fmt(run.time),'survived'],[run.kills,'slain'],['Lv '+run.level,'reached'],[HEROES[run.hero].name,'hero']].map(([b,s])=>`<div><b>${b}</b><small>${s}</small></div>`).join('');
+  const dt=dmgTable();$('endTop').innerHTML=dt.length?`Most damage: <b>${dt[0].n}</b> · ${fmtN(dt[0].d)} · ${fmtN(dt[0].dps)} DPS`+(dt.length>1?`<small>then ${dt.slice(1,3).map(x=>`${x.n} ${fmtN(x.d)} (${fmtN(x.dps)} DPS)`).join(' · ')}</small>`:''):'';
   $('endSouls').textContent=e.total;
   $('endBreak').textContent=`${run.souls} gathered · ${Math.floor(run.kills/15)} from kills · ${Math.floor(run.time/10)} for time${win?` · ${md.win} for the Ash Lord`:''}${meta('greed')?' · Greed bonus':''}${townLv('watch')?' · Watchtower bonus':''}${S&&S.souls?' · Gear bonus':''}`;
   $('endBurn').textContent=run.burned?`The horde burned the ${HUBN[run.burned]}. Repair it in town.`:'';
