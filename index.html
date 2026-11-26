@@ -999,6 +999,26 @@ rogue(g,r,f){
 }
 };
 const SPR={},CORPSE={};
+/* S34 (R39): 3D heroes. Sheets rendered in Blender from the Meshy/Mixamo models (tools/hero-sprites.py), made phone-sized by tools/game-sprites.py.
+   Rows = 8 directions (S, SW, W, NW, N, NE, E, SE; S faces the camera), columns = frames. Until a sheet has loaded, the old drawn hero is used. */
+const HERO3D={"barbarian":{"ppu":55.17,"n_idle":{"f":"n_idle.webp","n":16,"c":96,"fps":16,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_run":{"f":"n_run.webp","n":16,"c":96,"fps":24,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_attack":{"f":"n_attack.webp","n":16,"c":120,"fps":26,"loop":0,"ft":[60.0,89.5],"k":0.6},"n_hit":{"f":"n_hit.webp","n":16,"c":96,"fps":36,"loop":0,"ft":[48.0,75.1],"k":0.6},"n_death":{"f":"n_death.webp","n":16,"c":144,"fps":16,"loop":0,"ft":[72.0,103.9],"k":0.6},"t_town":{"f":"t_town.webp","n":16,"c":128,"fps":12,"loop":1,"ft":[64.0,100.2],"k":0.8},"t_townwalk":{"f":"t_townwalk.webp","n":16,"c":128,"fps":20,"loop":1,"ft":[64.0,100.2],"k":0.8}},"necromancer":{"ppu":55.17,"n_idle":{"f":"n_idle.webp","n":16,"c":96,"fps":16,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_run":{"f":"n_run.webp","n":16,"c":96,"fps":24,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_attack":{"f":"n_attack.webp","n":16,"c":120,"fps":26,"loop":0,"ft":[60.0,89.5],"k":0.6},"n_hit":{"f":"n_hit.webp","n":16,"c":96,"fps":36,"loop":0,"ft":[48.0,75.1],"k":0.6},"n_death":{"f":"n_death.webp","n":16,"c":173,"fps":16,"loop":0,"ft":[86.5,121.2],"k":0.6007},"t_town":{"f":"t_town.webp","n":16,"c":128,"fps":12,"loop":1,"ft":[64.0,100.2],"k":0.8},"t_townwalk":{"f":"t_townwalk.webp","n":16,"c":128,"fps":20,"loop":1,"ft":[64.0,100.2],"k":0.8}},"sorceress":{"ppu":55.17,"n_idle":{"f":"n_idle.webp","n":16,"c":96,"fps":16,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_run":{"f":"n_run.webp","n":16,"c":96,"fps":24,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_attack":{"f":"n_attack.webp","n":16,"c":120,"fps":26,"loop":0,"ft":[60.0,89.5],"k":0.6},"n_hit":{"f":"n_hit.webp","n":16,"c":96,"fps":36,"loop":0,"ft":[48.0,75.1],"k":0.6},"n_death":{"f":"n_death.webp","n":16,"c":192,"fps":16,"loop":0,"ft":[96.0,132.6],"k":0.6},"t_town":{"f":"t_town.webp","n":16,"c":154,"fps":12,"loop":1,"ft":[77.0,115.8],"k":0.8021},"t_townwalk":{"f":"t_townwalk.webp","n":16,"c":128,"fps":20,"loop":1,"ft":[64.0,100.2],"k":0.8}},"rogue":{"ppu":55.17,"n_idle":{"f":"n_idle.webp","n":16,"c":96,"fps":16,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_run":{"f":"n_run.webp","n":16,"c":96,"fps":24,"loop":1,"ft":[48.0,75.1],"k":0.6},"n_attack":{"f":"n_attack.webp","n":16,"c":120,"fps":26,"loop":0,"ft":[60.0,89.5],"k":0.6},"n_hit":{"f":"n_hit.webp","n":16,"c":96,"fps":36,"loop":0,"ft":[48.0,75.1],"k":0.6},"n_death":{"f":"n_death.webp","n":16,"c":173,"fps":16,"loop":0,"ft":[86.5,121.2],"k":0.6007},"t_town":{"f":"t_town.webp","n":16,"c":128,"fps":12,"loop":1,"ft":[64.0,100.2],"k":0.8},"t_townwalk":{"f":"t_townwalk.webp","n":16,"c":128,"fps":20,"loop":1,"ft":[64.0,100.2],"k":0.8}}};
+const H3={img:{},scr:null,M:25/* world px per metre of hero */};
+function h3img(h,key){const id=h+'/'+key;let o=H3.img[id];if(o)return o;const m=HERO3D[h]&&HERO3D[h][key];if(!m)return null;
+  o=H3.img[id]={ok:false,m,im:new Image()};o.im.onload=()=>{o.ok=true};o.im.onerror=()=>{o.bad=true};o.im.decoding='async';o.im.src='sprites/'+h+'/'+m.f;return o}
+function h3ready(h,keys){if(!HERO3D[h]||SET.flat3d)return false;let ok=true;for(const k of keys){const o=h3img(h,k);if(!o||!o.ok)ok=false}return ok}
+function h3preload(h,town){if(!HERO3D[h])return;for(const k in HERO3D[h])if(k[0]===(town?'t':'n'))h3img(h,k)}
+for(const h in HERO3D)h3preload(h,true);h3preload(save.hero);
+/* 0 = S ... 6 = E, from a screen-space direction (y down) */
+function h3dir(dx,dy,def){if(!dx&&!dy)return def||0;return((Math.round((Math.atan2(dy,dx)-Math.PI/2)/(Math.PI/4))%8)+8)%8}
+/* draws one frame with its feet at (x,y); tint = [css colour, alpha] for the hurt flash or the dark silhouette of a hero not yet bought */
+function h3draw(h,key,fi,dir,x,y,scale,tint,alpha){const o=h3img(h,key);if(!o||!o.ok)return false;const m=o.m,c=m.c,sc=scale/(HERO3D[h].ppu*m.k),
+  f=Math.max(0,Math.min(m.n-1,fi|0)),sx=f*c,sy=dir*c,dw=c*sc,dx=x-m.ft[0]*sc,dy=y-m.ft[1]*sc;
+  if(alpha!==undefined)ctx.globalAlpha=alpha;
+  if(!tint){ctx.drawImage(o.im,sx,sy,c,c,dx,dy,dw,dw)}
+  else{let s=H3.scr;if(!s){s=H3.scr=document.createElement('canvas')}if(s.width<c||s.height<c){s.width=s.height=Math.max(c,s.width)}const g=s.getContext('2d');
+    g.globalCompositeOperation='source-over';g.globalAlpha=1;g.clearRect(0,0,c,c);g.drawImage(o.im,sx,sy,c,c,0,0,c,c);g.globalCompositeOperation='source-atop';g.globalAlpha=tint[1];g.fillStyle=tint[0];g.fillRect(0,0,c,c);
+    ctx.drawImage(s,0,0,c,c,dx,dy,dw,dw)}
+  if(alpha!==undefined)ctx.globalAlpha=1;return true}
 function frames(n,w,h,fn,ss){return Array.from({length:n},(_,i)=>sset(w,h,g=>fn(g,i),ss))}
 /* a body lying on the ground: the sprite turned on its side, flattened, darkened and bloodied */
 function corpseOf(src){const k=.5,w=src.height*k,h=src.width*k*.62;
@@ -1432,7 +1452,7 @@ function newRun(hero,mode){
   run={hero,time:0,kills:0,xp:0,level:1,pending:0,souls:0,spawnT:.5,mode,round:-1,ev:0,evs:[],ei:0,elites:[],swarm:-1,boss:null,bossSpawned:false,shake:0,rerolls:meta('fate')+townLv('chapel'),revives:meta('revive'),weapons:[],passives:{},over:false,won:false,endT:0,hurt:0,hint:save.runs<3?6:0,bellT:18,
     cine:0,roarT:0,growlT:2,hbT:0,hbP:0,stepT:0,cryT:0,leap:null,dash:null,cb:[],furyT:0,charm:0,
     leg:{},set3:null,bone:0,boneT:0,ovT:0,vanT:0,rageN:0,rageT:0,sure:0,spin2:0,spin2h:0,wint:0,cacheD:0,wrath:0,kb:new Array(20).fill(0),kbi:0,kbT:0,wrathOn:false};
-  P={x:0,y:0,r:12,hp:1,fx:1,fy:0,face:1,walk:0,inv:0,safe:0,moving:false,atkT:0,atkA:0};
+  h3preload(hero);/* S34 (R39) */P={x:0,y:0,r:12,hp:1,fx:1,fy:0,face:1,walk:0,inv:0,safe:0,moving:false,atkT:0,atkA:0};
   run.evs=runEvents();run.elites=runElites();
   /* S25 (R27): Legendary effects and the 3-piece set skill for this night */
   for(const it of gOn(hero))if(it.L)run.leg[it.L]=1;
@@ -1626,7 +1646,7 @@ function damagePlayer(d,src){
     if(run.revives>0){run.revives--;ptNote('revive');P.hp=S.maxHp*.5;P.inv=2.2;banner('Undying','Death rejects you');sfx.roar();run.shake=14;flashA=.7;flashC='255,230,170';dSrc='revive';
       forNear(P.x,P.y,320,e=>{const a=Math.atan2(e.y-P.y,e.x-P.x);hurt(e,e.boss?400:250,Math.cos(a)*600,Math.sin(a)*600,true)});
       effects.push({k:'nova',x:P.x,y:P.y,R:320,life:.5,max:.5,col:'255,200,120'});
-    }else{P.hp=0;run.over=true;run.endT=1.9;gore({type:'hero',x:P.x,y:P.y,r:14,elite:1},true,rand()*TAU);burst(P.x,P.y,30,'255,120,40',120,1,2.5,true,-1);sfx.die_hero();run.shake=10;stop(.25)}
+    }else{P.hp=0;run.over=true;run.endT=1.9;P.h3die={t0:menuT,dir:P.h3?P.h3.dir:0};/* S34 (R39) */gore({type:'hero',x:P.x,y:P.y,r:14,elite:1},true,rand()*TAU);burst(P.x,P.y,30,'255,120,40',120,1,2.5,true,-1);sfx.die_hero();run.shake=10;stop(.25)}
   }
 }
 
@@ -1703,7 +1723,7 @@ function updateWeapons(dt){
     if(/^(bonespear|daggers|fireball|frostnova|axes|meteor|poison)$/.test(w.id)&&!(P.atkT>.05)){P.atkT=.22;P.atkA=Math.atan2(P.fy,P.fx)}/* S04: the hero leans into each cast */
     if(run.leap||run.dash){w.t=.1;continue}/* S23: nothing else fires mid-leap or mid-dash */
     switch(w.id){
-      case'cleave':{w.t=t.cd[L]*S.cdMul;const a=fireAt(P.x,P.y,t.R[L]*S.area*1.8);
+      case'cleave':{w.t=t.cd[L]*S.cdMul;const a=fireAt(P.x,P.y,t.R[L]*S.area*1.8);h3swing(a);
         if(L>=6&&(w.n=(w.n||0)+1)%3===0){slash(a,L,TAU,420);run.shake=Math.max(run.shake,3);break}/* Mastery: every 3rd swing is a full circle */
         slash(a,L);if(L>=3)slash(a+Math.PI,L);break}
       case'bonespear':{w.t=t.cd[L]*S.cdMul;const n=t.n[L]+S.proj,a=fireAt(P.x,P.y,420);for(let i=0;i<n;i++){const b=a+(i-(n-1)/2)*.16;projs.push({k:'bone',x:P.x,y:P.y-6,vx:Math.cos(b)*430,vy:Math.sin(b)*430,dmg:t.dmg[L]*S.dmgMul,pierce:t.pierce[L],r:8,life:1.4,hits:[],split:L>=6})}sfx.bonecast();break}
@@ -2229,6 +2249,10 @@ function hubFlames(x,y,s,t,big){/* additive flame tongues; big = the fire pit, s
 function hubLabel(x,y,txt,col,sel,s){ctx.font=`600 ${Math.round(12*Math.max(.95,s))}px Cinzel,Georgia,serif`;ctx.textAlign='center';ctx.textBaseline='middle';
   const w=ctx.measureText(txt).width+12;ctx.globalAlpha=sel?.95:.88;ctx.fillStyle='#0a0605';ctx.fillRect(x-w/2,y-9,w,18);ctx.strokeStyle=sel?'#ffd27a':'rgba(201,154,62,.6)';ctx.lineWidth=1;ctx.strokeRect(x-w/2+.5,y-8.5,w-1,17);
   ctx.globalAlpha=1;ctx.fillStyle=col;ctx.fillText(txt,x,y+.5)}
+/* S34 (R39): 3D heroes in the town: they rest facing you, half turned to the fire, and walk to it or back; a hero not yet bought is a dark shape */
+function h3town(id,st,x,y,hs,own,t,G){if(!h3ready(id,['t_town','t_townwalk']))return false;if(own&&id===save.hero)h3preload(id);const mv=st.d!==0,key=mv?'t_townwalk':'t_town',m=HERO3D[id][key];
+  let vx=G.cx-x,vy=G.fy-y;const d=Math.hypot(vx,vy)||1;vx/=d;vy/=d;if(mv){if(st.d<0){vx=-vx;vy=-vy}}else{vy+=1.3}
+  const fi=((t+st.ph)*m.fps)%m.n;return h3draw(id,key,fi,h3dir(vx,vy),x,y+1,H3.M*hs,own?null:['#0c0706',1])}
 function renderHub(dt){
   const G=HUB.G=hubGeom(),s=G.s,t=menuT;
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
@@ -2257,8 +2281,8 @@ function renderHub(dt){
     items.push({y,draw:()=>{const own=!!save.heroes[id],mv=st.d!==0,fi=mv?(Math.floor(st.walk)&7):8,toward=x<G.cx?0:1,flip=st.d<0?1-toward:toward,fr=SPR[id].fr[fi],w=fr.w*hs,h=fr.h*hs,bob=mv?0:Math.sin(t*2+st.ph)*.7,sel=save.hero===id;
       ctx.globalAlpha=.8;ctx.drawImage(SHADOW,x-w*.3,y-w*.07,w*.6,w*.16);ctx.globalAlpha=1;
       if(sel){ctx.strokeStyle='rgba(255,210,122,.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+1,w*.3,w*.1,0,0,TAU);ctx.stroke()}
-      ctx.drawImage(own?fr.n[flip]:hubDark(id,fi,flip),x-w/2,y-14*hs-h/2+bob,w,h);
-      if(sel||!own)HUB.hp[id].label={x,y:y+12*s,txt:sel?HEROES[id].name+(own?'':` · ${HEROES[id].cost} souls`):`${HEROES[id].cost} souls`,col:own?'#ffd9a8':'#c9b3f0',sel}}});void fr0}
+      if(!h3town(id,st,x,y,hs,own,t,G))ctx.drawImage(own?fr.n[flip]:hubDark(id,fi,flip),x-w/2,y-14*hs-h/2+bob,w,h);
+      if(sel||!own)HUB.hp[id].label={x,y:sel?y+12*s:y-50*hs-4*s,/* S34 (R39): price tags above the head, clear of the taller 3D hero by the fire */txt:sel?HEROES[id].name+(own?'':` · ${HEROES[id].cost} souls`):`${HEROES[id].cost} souls`,col:own?'#ffd9a8':'#c9b3f0',sel}}});void fr0}
   /* the fire pit: stones and logs (sorted with the heroes), flames after the darkness */
   items.push({y:G.fy+2,draw:()=>{ctx.fillStyle='#1a0f0a';ctx.save();ctx.translate(G.cx,G.fy);ctx.rotate(.35);ctx.fillRect(-16*s,-3*s,32*s,6*s);ctx.rotate(-.7);ctx.fillRect(-16*s,-3*s,32*s,6*s);ctx.restore();
     for(let i=0;i<12;i++){const a=i/12*TAU;ctx.fillStyle=i%2?'#4a3d36':'#3a2f2a';ctx.beginPath();ctx.ellipse(G.cx+Math.cos(a)*24*s,G.fy+Math.sin(a)*9*s,5*s,3.4*s,0,0,TAU);ctx.fill()}}});
@@ -2479,6 +2503,23 @@ function drawWorldBase(cx,cy,vw,vh,lights){
 }
 const _lights=[];
 
+/* S34 (R39): the 3D hero in the night. Runs while moving; standing still he rests, swings or casts toward his target, and flinches when hit.
+   Animations follow the night's clock, so they hold still while the game is paused. */
+function h3hero(now,spin,hop){const h=run.hero;if(!h3ready(h,['n_idle','n_run','n_attack','n_hit']))return false;
+  const a=P.h3||(P.h3={mv:'',t:0,lt:run.time,dir:0,atk:0,hurt:0}),dt=Math.max(0,Math.min(.1,run.time-a.lt));a.lt=run.time;
+  if(P.moving)a.dir=h3dir(P.fx,P.fy,a.dir);
+  let mv=P.moving?'n_run':'n_idle';
+  if(P.atkT>(a.la||0)+.01&&a.atk<=0){a.atk=1;a.atkA=P.atkA}a.la=P.atkT;
+  if(run.hurt>(a.lh||0)+.01&&a.hurt<=0)a.hurt=1;a.lh=run.hurt;
+  if(!P.moving){if(a.atk>0){mv='n_attack';if(a.atkA!==undefined)a.dir=h3dir(Math.cos(a.atkA),Math.sin(a.atkA),a.dir)}else if(a.hurt>0)mv='n_hit'}
+  else{a.atk=0;a.hurt=0}
+  if(mv!==a.mv){a.mv=mv;a.t=0}else a.t+=dt;
+  const m=HERO3D[h][mv];let fi=a.t*m.fps;
+  if(m.loop)fi=fi%m.n;else if(fi>=m.n){if(mv==='n_attack')a.atk=0;if(mv==='n_hit')a.hurt=0;fi=m.n-1}
+  const dir=spin?((now*16)|0)&7:a.dir,tint=run.hurt>.22?['#ff3b24',.5*clamp((run.hurt-.22)/.13,0,1)]:null;
+  return h3draw(h,mv,fi,dir,P.x,P.y+13-hop,H3.M,tint)}
+/* S34 (R39): the barbarian's cleave also counts as a swing for the 3D hero */
+function h3swing(a){if(P.h3&&!P.moving&&P.h3.atk<=0){P.h3.atk=1;P.h3.atkA=a}}
 function sprDraw(img,x,y,w,h,rot){if(!rot){ctx.drawImage(img,x-w/2,y-h/2,w,h);return}ctx.save();ctx.translate(x,y+h*.4);ctx.rotate(rot);ctx.drawImage(img,-w/2,-h*.9,w,h);ctx.restore()}
 function render(dt){
   const z=ZOOM*DPR,sh=SET.shake?run.shake:run.shake*.15,now=menuT,t=run.time;
@@ -2527,6 +2568,8 @@ function render(dt){
   list.sort((a,b)=>a.y-b.y);
   /* S04: falling bodies: the last pose topples away from the killing blow, then hands over to the corpse */
   for(const f of effects)if(f.k==='fall'){const t=Math.min(1,(f.max-f.life)/FALLT),e2=t*t*(3-2*t);ctx.save();ctx.globalAlpha=t<1?1:Math.max(0,f.life/.1);ctx.translate(f.x,f.y+f.h*.4);ctx.rotate(f.dir*e2*1.45);ctx.scale(1,1-.25*e2);ctx.drawImage(f.img,-f.w/2,-f.h*.9,f.w,f.h);ctx.restore()}
+  /* S34 (R39): the 3D hero falls where he died, then lies still until the end screen */
+  if(run.over&&P.h3die&&h3ready(run.hero,['n_death'])){const m=HERO3D[run.hero].n_death;h3draw(run.hero,'n_death',(now-P.h3die.t0)*m.fps,P.h3die.dir,P.x,P.y+13,H3.M)}
   for(const o of list){
     if(o.gol){drawGolem(o);continue}
     /* walk frames: 0 passing, 1 contact, 2 passing, 3 contact (body lowest at contact), 4 standing */
@@ -2542,6 +2585,7 @@ function render(dt){
       if(run.bone>0){ctx.save();ctx.strokeStyle=`rgba(230,220,200,${.3+.4*run.bone/30})`;ctx.lineWidth=2.2;ctx.setLineDash([6,5]);ctx.lineDashOffset=-now*18;ctx.beginPath();ctx.ellipse(P.x,P.y-7-hop,18,23,0,0,TAU);ctx.stroke();ctx.restore()}/* S25: Bone Armour */
       if(P.inv>0&&Math.floor(now*14)%2)continue;
       const fc=spin?(Math.sin(now*26)>0?1:-1):P.face;if(spin)lean=Math.sin(now*26)*.25;
+      if(h3hero(now,spin,hop))continue;/* S34 (R39) */
       const set=run.hurt>.22?fr.f:fr.n;sprDraw(set[fc<0?1:0],P.x+ox,P.y-bob-4-hop,sp.w*(1-br*.006),sp.h*(1+br*.018),lean);continue}
     if(o.type===undefined){const ph=o.walk*10,br=o.moving?0:Math.sin(now*2.4+o.walk),sp=SPR.minion[o.moving?((ph/.7854-1.5)|0)&7:8],bob=o.moving?Math.abs(Math.sin(ph))*1.2:0;ctx.drawImage(SHADOW,o.x-11,o.y+8,22,8);sprDraw(sp.n[o.face<0?1:0],o.x,o.y-bob-3,sp.w,sp.h*(1+br*.018),0);
       if(o.swing>0){ctx.strokeStyle=`rgba(180,255,190,${o.swing*5})`;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(o.x,o.y-4,16,o.face>0?-1.2:Math.PI-.6,o.face>0?.6:Math.PI+1.2);ctx.stroke()}continue}
@@ -2741,7 +2785,7 @@ function frame(now){
 buildSprites();buildMisc();resize();setMute(save.muted,true);syncSet();buildMenu();setCloud('local');initCloud();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>buildMenu());
 requestAnimationFrame(frame);
-if(DEBUG)window.__AH={ptStart,get PT(){return PT},SPR,CORPSE,GROUND,DEC,DECOR,get fps(){return fpsV},get q(){return Q},get state(){return state},get run(){return run},get P(){return P},get effects(){return effects},get enemies(){return enemies},stats:()=>({fps:Math.round(fpsV),q:Q,enemies:enemies.length,parts:nP,lights:nL,voices:AU.voices,decals:decals.length,dpr:DPR}),
+if(DEBUG)window.__AH={H3,HERO3D,SET,ptStart,get PT(){return PT},SPR,CORPSE,GROUND,DEC,DECOR,get fps(){return fpsV},get q(){return Q},get state(){return state},get run(){return run},get P(){return P},get effects(){return effects},get enemies(){return enemies},stats:()=>({fps:Math.round(fpsV),q:Q,enemies:enemies.length,parts:nP,lights:nL,voices:AU.voices,decals:decals.length,dpr:DPR}),
   jump(t){if(!run)return;run.time=t;while(run.ei<run.elites.length&&run.elites[run.ei].t<t)run.ei++;while(run.ev<run.evs.length&&run.evs[run.ev].t<t)run.ev++},god(){if(S){S.maxHp=99999;P.hp=99999;S.armor=999}},lvl(){if(run)run.pending++},setQ(q){Q=q;QS=QL[q];resize()},hurtMe(f){P.hp=S.maxHp*f},chest(){if(run)drop('chest',P.x+20,P.y)},
   /* S23 test helpers */start(h,m){newRun(h,m||'short')},give(id,l){const w=getW(id);if(w)w.lvl=l;else{addWeapon(id);getW(id).lvl=l}if(id==='skeletons')syncMinions()},pool:()=>offerPool().map(o=>o.id+':'+o.lvl),get save(){return save},get zones(){return zones},get projs(){return projs},altar(){altarHero=null;buildAltar();setState('altar')},
   /* S24 test helpers */shop(){buildShop();setState('shop')},use:i=>useItem(i),get S(){return S},
